@@ -1,0 +1,88 @@
+@import "tailwindcss";
+@import "@fontsource-variable/manrope";
+
+@source "../views";
+@source "../js";
+
+/* ==========================================================================
+   MOTOGRIP DESIGN SETTINGS: change colours, fonts and rounding HERE only.
+   ========================================================================== */
+@theme {
+  --font-sans: "Manrope Variable", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+
+  --color-navy: #102B59;          /* main dark blue */
+  --color-navy-deep: #0A1D3F;     /* darker blue for hero backgrounds */
+  --color-industrial: #174A7E;    /* lighter blue */
+  --color-amber: #F5B82E;         /* gold accent (buttons, highlights) */
+  --color-surface: #F3F5F8;       /* light grey background */
+  --color-ink: #202938;           /* body text */
+  --color-steel: #CBD2DC;         /* borders */
+
+  --breakpoint-xs: 30rem;
+  --radius-control: 0.5rem;
+  --radius-panel: 1rem;
+  --shadow-lift: 0 10px 30px -12px rgb(16 43 89 / 0.35);
+  --shadow-card: 0 1px 2px rgb(16 43 89 / 0.06), 0 18px 40px -22px rgb(16 43 89 / 0.35);
+
+  --text-display: clamp(2.6rem, 1.4rem + 4.6vw, 5.25rem);
+  --text-display--line-height: 1.02;
+  --text-display--letter-spacing: -0.03em;
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { @apply bg-white text-ink font-sans antialiased; }
+  :focus-visible { outline: 3px solid var(--color-amber); outline-offset: 2px; }
+  [x-cloak] { display: none !important; }
+}
+
+/* ==========================================================================
+   READY-MADE PIECES used all over the site. Views just say class="btn btn-primary".
+   ========================================================================== */
+@layer components {
+  .container-x { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
+
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-control px-6 py-3 font-semibold transition duration-200 motion-reduce:transition-none; }
+  .btn-primary { @apply bg-amber text-navy hover:-translate-y-0.5 hover:brightness-95 motion-reduce:hover:translate-y-0; }
+  .btn-dark { @apply bg-navy text-white hover:bg-industrial; }
+  .btn-light { @apply border border-white/40 text-white hover:bg-white/10; }
+  .btn-outline { @apply border-2 border-navy text-navy hover:bg-navy hover:text-white; }
+
+  .eyebrow { @apply text-xs font-bold uppercase tracking-[0.2em] text-industrial; }
+  .section-title { @apply mt-2 text-3xl font-extrabold tracking-tight text-navy sm:text-4xl; }
+  .bar { @apply mt-4 block h-1 w-14 rounded bg-amber; }
+
+  .card { @apply rounded-panel border border-steel/70 bg-white shadow-card; }
+  .chip { @apply inline-flex items-center rounded-full border border-steel bg-white px-3 py-1 text-sm; }
+  .field { @apply w-full rounded-control border border-steel bg-white px-3 py-2.5 focus:border-industrial; }
+
+  /* Decorative background: faint engineering grid on dark sections */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.06) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse at 70% 40%, black 25%, transparent 75%);
+  }
+
+  .float-slow { animation: float 7s ease-in-out infinite; }
+  .marquee-track { animation: marquee 45s linear infinite; }
+  .marquee:hover .marquee-track { animation-play-state: paused; }
+}
+
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes marquee { to { transform: translateX(-50%); } }
+@keyframes reveal { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+
+/* Gentle "fade in as you scroll" for anything marked data-reveal. Browsers that do not support it simply show the content. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    [data-reveal] { animation: reveal linear both; animation-timeline: view(); animation-range: entry 0% entry 30%; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .float-slow, .marquee-track { animation: none; }
+  *, ::before, ::after { transition-duration: 0.01ms !important; }
+}

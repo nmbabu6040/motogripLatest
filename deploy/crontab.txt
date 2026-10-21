@@ -1,0 +1,2 @@
+# crontab -u www-data -e   (runs the Laravel scheduler: scheduled posts, backups, verification, data retention)
+* * * * * cd /var/www/motogrip/current && php artisan schedule:run >> /dev/null 2>&1
