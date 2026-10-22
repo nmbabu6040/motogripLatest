@@ -47,4 +47,12 @@ return [
     'blog_intro' => 'Articles and news about lubricants and engine care.',
     'compare_intro' => 'Put products side by side. Rows that differ are highlighted.',
     'compare_need_two' => 'Choose at least two products to compare.', 'compare_hint' => 'Highlighted rows differ between products. Share this page link to share the comparison.',
+    'about' => 'About Us',
+    'mobile' => 'Mobile',
+    'email_short' => 'Email',
+    'categories_title' => 'Product categories',
+    'n_products' => '{1} product|[2,*] products',
+    'n_categories' => '{1} category|[2,*] categories',
+    'explore_range_title' => 'Explore the full range',
+    'explore_range_text' => 'Engine oils, gear oils, hydraulic oils, greases and more. Browse every product and send an inquiry.',
 ];

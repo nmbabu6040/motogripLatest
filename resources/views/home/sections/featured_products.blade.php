@@ -1,68 +1,33 @@
 @if ($featured->isNotEmpty())
-    <section class="py-20" data-reveal>
-        <div class="container-x">
-            <div class="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                    <p class="eyebrow">{{ __('site.featured') }}</p>
-                    <h2 class="section-title">
-                        {{ \App\Support\Lang::pick($content['title'] ?? '') ?: __('site.products') }}</h2>
-                    <span class="bar" aria-hidden="true"></span>
-                </div>
-                <a class="font-semibold text-industrial underline underline-offset-4 hover:text-navy"
-                    href="{{ $lr('catalog.index') }}">{{ __('site.all_products') }} →</a>
-            </div>
-
-            @if ($featured->count() === 1)
-                {{-- Only one product: show it as a wide showcase card --}}
-                @php
-                    $p = $featured->first();
-                    $img = $p->getFirstMedia('images');
-                @endphp
-                <article class="card mt-10 grid overflow-hidden md:grid-cols-2">
-                    <a href="{{ $lr('catalog.show', ['product' => $p]) }}"
-                        class="flex items-center justify-center bg-gradient-to-b from-white to-surface p-8 md:p-12">
-                        @if ($img)
-                            <img src="{{ $img->hasGeneratedConversion('large') ? $img->getUrl('large') : $img->getUrl() }}"
-                                alt="{{ $img->getCustomProperty('alt') ?: $p->name }}" loading="lazy" width="600"
-                                height="600" class="max-h-[28rem] w-auto object-contain">
-                        @else<span class="text-ink/60">{{ $p->sku }}</span>
-                        @endif
-                    </a>
-                    <div class="flex flex-col justify-center p-8 md:p-12">
-                        <p class="eyebrow">{{ $p->category?->name }}</p>
-                        <h3 class="mt-2 text-3xl font-extrabold tracking-tight text-navy"><a
-                                href="{{ $lr('catalog.show', ['product' => $p]) }}"
-                                class="hover:underline">{{ $p->name }}</a></h3>
-                        <p class="mt-2 text-sm text-ink/70">{{ __('site.sku') }}: {{ $p->sku }}@if ($p->viscosity_grade)
-                                · {{ $p->viscosity_grade }}
-                            @endif
-                        </p>
-                        @if ($p->short_description)
-                            <p class="mt-4 leading-relaxed">{{ $p->short_description }}</p>
-                        @endif
-                        @if ($p->packaging->where('is_active', true)->isNotEmpty())
-                            <ul class="mt-5 flex flex-wrap gap-2">
-                                @foreach ($p->packaging->where('is_active', true) as $pack)
-                                    <li class="chip">{{ $pack->label }}</li>
-                                @endforeach
-                            </ul>
-                        @endif
-                        <div class="mt-8 flex flex-wrap gap-3">
-                            <a href="{{ $lr('catalog.show', ['product' => $p]) }}"
-                                class="btn btn-dark">{{ __('site.view_details') }}</a>
-                            <a href="{{ $lr('contact.create') }}?product={{ $p->slug }}"
-                                class="btn btn-outline">{{ __('site.send_inquiry') }}</a>
-                        </div>
-                    </div>
-                </article>
-            @else
-                <div
-                    class="mt-10 grid gap-6 {{ $featured->count() === 2 ? 'sm:grid-cols-2' : ($featured->count() === 3 ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2 lg:grid-cols-4') }}">
-                    @foreach ($featured as $product)
-                        @include('catalog._card', ['product' => $product])
-                    @endforeach
-                </div>
-            @endif
+@php
+    $n = $featured->count();
+    // When there are fewer than four products, a wide tile fills the rest of the row so the grid never looks empty.
+    $fill = $n < 4 ? [1 => 'lg:col-span-3', 2 => 'lg:col-span-2', 3 => 'lg:col-span-1'][$n] : null;
+@endphp
+<section class="py-20" data-reveal><div class="container-x">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <p class="eyebrow">{{ __('site.featured') }}</p>
+            <h2 class="section-title">{{ \App\Support\Lang::pick($content['title'] ?? '') ?: __('site.products') }}</h2>
+            <span class="bar" aria-hidden="true"></span>
         </div>
-    </section>
+        <a class="font-semibold text-industrial underline underline-offset-4 hover:text-navy" href="{{ $lr('catalog.index') }}">{{ __('site.all_products') }} →</a>
+    </div>
+
+    <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        @foreach ($featured as $product)@include('catalog._card', ['product' => $product])@endforeach
+
+        @if ($fill)
+            <a href="{{ $lr('catalog.index') }}" class="group relative isolate flex flex-col justify-between overflow-hidden rounded-panel bg-gradient-to-br from-navy-deep via-navy to-industrial p-8 text-white shadow-card transition hover:shadow-lift sm:col-span-2 {{ $fill }} motion-reduce:transition-none">
+                <span class="bg-grid absolute inset-0 -z-10 opacity-50" aria-hidden="true"></span>
+                <span>
+                    <span class="eyebrow !text-amber">{{ __('site.products') }}</span>
+                    <span class="mt-3 block text-2xl font-extrabold tracking-tight sm:text-3xl">{{ __('site.explore_range_title') }}</span>
+                    <span class="mt-3 block max-w-md leading-relaxed text-white/75">{{ __('site.explore_range_text') }}</span>
+                </span>
+                <span class="mt-8 inline-flex items-center gap-2 font-bold text-amber">{{ __('site.all_products') }} <span class="transition group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true">→</span></span>
+            </a>
+        @endif
+    </div>
+</div></section>
 @endif

@@ -28,18 +28,32 @@ class Navigation
             ])->all();
         }
 
-        return $location === 'header' ? [
-            ['label' => __('site.products'), 'url' => Lang::route('catalog.index'), 'new_tab' => false, 'parent_id' => null, 'id' => 1],
-            ['label' => __('site.resources'), 'url' => Lang::route('resources.index'), 'new_tab' => false, 'parent_id' => null, 'id' => 2],
-            ['label' => __('site.dealers'), 'url' => Lang::route('dealers.index'), 'new_tab' => false, 'parent_id' => null, 'id' => 3],
-            ['label' => __('site.blog'), 'url' => Lang::route('blog.index'), 'new_tab' => false, 'parent_id' => null, 'id' => 4],
-            ['label' => __('site.contact'), 'url' => Lang::route('contact.create'), 'new_tab' => false, 'parent_id' => null, 'id' => 5],
-        ] : [];
+        if ($location !== 'header') {
+            return [];
+        }
+
+        $item = fn (string $label, string $url, int $id) => ['label' => $label, 'url' => $url, 'new_tab' => false, 'parent_id' => null, 'id' => $id];
+        $items = [$item(__('site.home'), Lang::route('home'), 0)];
+
+        // "About us" appears only when a published page with that slug exists, so the link never leads nowhere.
+        $about = Cache::remember('nav.about', 300, fn () => DB::table('pages')->whereNull('deleted_at')->where('status', 'published')->whereIn('slug', ['about-us', 'about'])->value('slug'));
+        if ($about) {
+            $items[] = $item(__('site.about'), Lang::route('page.show', ['page' => $about]), 6);
+        }
+
+        return array_merge($items, [
+            $item(__('site.products'), Lang::route('catalog.index'), 1),
+            $item(__('site.resources'), Lang::route('resources.index'), 2),
+            $item(__('site.dealers'), Lang::route('dealers.index'), 3),
+            $item(__('site.blog'), Lang::route('blog.index'), 4),
+            $item(__('site.contact'), Lang::route('contact.create'), 5),
+        ]);
     }
 
     public static function forget(): void
     {
         Cache::forget('menu.header');
         Cache::forget('menu.footer');
+        Cache::forget('nav.about');
     }
 }

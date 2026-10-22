@@ -25,6 +25,7 @@ class PageController extends Controller
     {
         $page = Page::create($this->data($request, new Page));
         activity('admin')->causedBy($request->user())->performedOn($page)->log('page.created');
+        \App\Support\Navigation::forget();
 
         return redirect()->route('admin.pages.index')->with('status', 'Page saved.');
     }
@@ -38,6 +39,7 @@ class PageController extends Controller
     {
         $page->update($this->data($request, $page));
         activity('admin')->causedBy($request->user())->performedOn($page)->log('page.updated');
+        \App\Support\Navigation::forget();
 
         return redirect()->route('admin.pages.index')->with('status', 'Page saved.');
     }
@@ -45,6 +47,7 @@ class PageController extends Controller
     public function destroy(Request $request, Page $page)
     {
         activity('admin')->causedBy($request->user())->performedOn($page)->log('page.deleted');
+        \App\Support\Navigation::forget();
         $page->delete();
 
         return redirect()->route('admin.pages.index')->with('status', 'Page deleted.');
