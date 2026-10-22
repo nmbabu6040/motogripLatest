@@ -29,7 +29,7 @@ Route::middleware(['web', SecurityHeaders::class, 'auth', 'verified', EnsureAcco
             Route::put('users/{user}', [Admin\UserController::class, 'update'])->name('users.update');
         });
 
-        Route::middleware('can:roles.manage')->group(fn() => Route::resource('roles', Admin\RoleController::class)->except('show'));
+        Route::middleware('can:roles.manage')->group(fn () => Route::resource('roles', Admin\RoleController::class)->except('show'));
 
         Route::middleware('can:settings.manage')->group(function () {
             Route::get('settings', [Admin\SettingsController::class, 'edit'])->name('settings.edit');
@@ -45,7 +45,7 @@ Route::middleware(['web', SecurityHeaders::class, 'auth', 'verified', EnsureAcco
             Route::resource('products', Admin\ProductController::class)->except('show');
             Route::resource('categories', Admin\CategoryController::class)->except('show');
         });
-        Route::middleware('can:documents.manage')->group(fn() => Route::resource('documents', Admin\DocumentController::class)->only(['index', 'create', 'store', 'update', 'destroy']));
+        Route::middleware('can:documents.manage')->group(fn () => Route::resource('documents', Admin\DocumentController::class)->only(['index', 'create', 'store', 'update', 'destroy']));
 
         // Sales
         Route::middleware('can:inquiries.manage')->group(function () {
@@ -83,7 +83,8 @@ Route::middleware(['web', SecurityHeaders::class, 'auth', 'verified', EnsureAcco
             Route::put('comments/{comment}', [Admin\CommentModerationController::class, 'update'])->name('comments.update');
             Route::delete('comments/{comment}', [Admin\CommentModerationController::class, 'destroy'])->name('comments.destroy');
         });
-        Route::middleware('can:pages.manage')->group(fn() => Route::resource('pages', Admin\PageController::class)->except('show'));
+        Route::middleware('can:pages.manage')->group(fn () => Route::resource('pages', Admin\PageController::class)->except('show'));
+        Route::middleware('can:homepage.manage')->group(fn () => Route::resource('faqs', Admin\FaqController::class)->except('show'));
         Route::middleware('can:homepage.manage')->prefix('homepage')->name('homepage.')->group(function () {
             Route::get('/', [Admin\HomepageController::class, 'index'])->name('index');
             Route::post('{key}/toggle', [Admin\HomepageController::class, 'toggle'])->name('toggle');
