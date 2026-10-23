@@ -35,10 +35,11 @@ class Navigation
         $item = fn (string $label, string $url, int $id) => ['label' => $label, 'url' => $url, 'new_tab' => false, 'parent_id' => null, 'id' => $id];
         $items = [$item(__('site.home'), Lang::route('home'), 0)];
 
-        // "About us" appears only when a published page with that slug exists, so the link never leads nowhere.
-        $about = Cache::remember('nav.about', 300, fn () => DB::table('pages')->whereNull('deleted_at')->where('status', 'published')->whereIn('slug', ['about-us', 'about'])->value('slug'));
-        if ($about) {
-            $items[] = $item(__('site.about'), Lang::route('page.show', ['page' => $about]), 6);
+        // Published pages marked "show in menu" (and an About Us page) appear after Home. No page, no link.
+        $pages = Cache::remember('nav.pages', 300, fn () => DB::table('pages')->whereNull('deleted_at')->where('status', 'published')
+            ->where(fn ($q) => $q->where('show_in_menu', true)->orWhereIn('slug', ['about-us', 'about']))->orderBy('id')->get(['slug', 'title'])->all());
+        foreach ($pages as $n => $p) {
+            $items[] = $item(Lang::pick($p->title), Lang::route('page.show', ['page' => $p->slug]), 100 + $n);
         }
 
         return array_merge($items, [
@@ -54,6 +55,6 @@ class Navigation
     {
         Cache::forget('menu.header');
         Cache::forget('menu.footer');
-        Cache::forget('nav.about');
+        Cache::forget('nav.pages');
     }
 }
