@@ -11,7 +11,7 @@ use App\Http\Middleware\SetLocale;
 use Illuminate\Support\Facades\Route;
 
 // Authenticated area first, so /admin and /affiliate are never treated as CMS page slugs.
-require __DIR__ . '/admin.php';
+require __DIR__.'/admin.php';
 
 Route::get('health', HealthController::class)->name('health');
 Route::get('robots.txt', [SeoFilesController::class, 'robots']);
@@ -28,7 +28,7 @@ Route::middleware(['web', SecurityHeaders::class])->group(function () {
 
 // Public site: English at "/", Bengali at "/bn".
 foreach (['en' => ['', ''], 'bn' => ['bn', 'bn.']] as $locale => [$prefix, $name]) {
-    Route::middleware(['web', SecurityHeaders::class, SetLocale::class . ':' . $locale, CaptureReferral::class])
+    Route::middleware(['web', SecurityHeaders::class, SetLocale::class.':'.$locale, CaptureReferral::class])
         ->prefix($prefix)->name($name)->group(base_path('routes/public.php'));
 }
 

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class HomepageController extends Controller
 {
@@ -35,6 +36,7 @@ class HomepageController extends Controller
         'newsletter' => ['data', ['Subscribers', 'admin.newsletter.index']],
         'social_links' => ['data', ['Settings → Social profiles', 'admin.settings.edit']],
     ];
+
 
     public function index()
     {
@@ -100,6 +102,7 @@ class HomepageController extends Controller
             'body.en' => ['nullable', 'string', 'max:3000'], 'body.bn' => ['nullable', 'string', 'max:3000'],
             'points_en' => ['nullable', 'string', 'max:4000'], 'points_bn' => ['nullable', 'string', 'max:4000'],
             'image' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'layout' => ['nullable', Rule::in(['image_right', 'image_left', 'banner'])],
         ]);
         $clean = fn ($a) => array_filter($a ?? [], fn ($v) => $v !== null && $v !== '');
         $old = $this->content($key);
@@ -123,6 +126,7 @@ class HomepageController extends Controller
             'body' => in_array($mode, ['data', 'stats'], true) ? [] : $clean($d['body'] ?? []),
             'items' => in_array($mode, ['text', 'stats'], true) ? $this->points($d['points_en'] ?? '', $d['points_bn'] ?? '') : [],
             'image' => $image,
+            'layout' => $d['layout'] ?? ($old['layout'] ?? 'image_right'),
         ];
 
         DB::table('homepage_sections')->where('key', $key)->update(['content' => json_encode($content, JSON_UNESCAPED_UNICODE), 'updated_at' => now()]);

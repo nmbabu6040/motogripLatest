@@ -15,14 +15,9 @@ class BackupService
         return config('motogrip.backups.disk');
     }
 
-    // public function configured(): bool
-    // {
-    //     return filled(env('BACKUP_ARCHIVE_PASSWORD'));
-    // }
-
     public function configured(): bool
     {
-        return filled(config('backup.backup.password'));
+        return filled(env('BACKUP_ARCHIVE_PASSWORD'));
     }
 
     public function run(string $type, ?int $userId = null, ?int $recordId = null): int
@@ -39,26 +34,20 @@ class BackupService
 
             $code = Artisan::call('backup:run', ['--only-db' => $type === 'database', '--only-files' => $type === 'media', '--disable-notifications' => true]);
             if ($code !== 0) {
-                throw new \RuntimeException('backup:run failed: ' . trim(Artisan::output()));
+                throw new \RuntimeException('backup:run failed: '.trim(Artisan::output()));
             }
 
-            $new = collect($disk->allFiles(config('backup.backup.name')))->diff($before)->sortByDesc(fn($f) => $disk->lastModified($f))->first();
+            $new = collect($disk->allFiles(config('backup.backup.name')))->diff($before)->sortByDesc(fn ($f) => $disk->lastModified($f))->first();
             if (! $new) {
                 throw new \RuntimeException('Backup finished but no new archive was found.');
             }
 
             DB::table('backup_records')->where('id', $recordId)->update([
-                'path' => $new,
-                'size' => $disk->size($new),
-                'checksum' => $this->checksum($new),
-                'status' => 'succeeded',
-                'finished_at' => now(),
-                'updated_at' => now(),
-                'error' => null,
+                'path' => $new, 'size' => $disk->size($new), 'checksum' => $this->checksum($new), 'status' => 'succeeded', 'finished_at' => now(), 'updated_at' => now(), 'error' => null,
             ]);
         } catch (\Throwable $e) {
             DB::table('backup_records')->where('id', $recordId)->update(['status' => 'failed', 'finished_at' => now(), 'updated_at' => now(), 'error' => mb_substr($e->getMessage(), 0, 2000)]);
-            \App\Support\Notify::staff('Backup FAILED', ['A ' . $type . ' backup failed.', mb_substr($e->getMessage(), 0, 500)], route('admin.backups.index'));
+            \App\Support\Notify::staff('Backup FAILED', ['A '.$type.' backup failed.', mb_substr($e->getMessage(), 0, 500)], route('admin.backups.index'));
             report($e);
         }
 

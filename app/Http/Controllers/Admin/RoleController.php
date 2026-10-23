@@ -81,7 +81,8 @@ class RoleController extends Controller
 
     public function destroy(Request $request, Role $role)
     {
-        abort_if(in_array($role->name, \Database\Seeders\RolesAndPermissionsSeeder::protectedRoles(), true), 403, 'Built-in roles cannot be deleted.');
+        // Gate::before lets super administrators past every policy, so the built-in role rule is enforced here too.
+        abort_if(in_array($role->name, RolesAndPermissionsSeeder::protectedRoles(), true), 403, 'Built-in roles cannot be deleted.');
         $this->authorize('delete', $role);
 
         if ($role->users()->exists()) {

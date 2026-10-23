@@ -102,3 +102,42 @@ it('keeps unknown homepage sections out of reach', function () {
     $this->actingAs(editor())->get('/admin/homepage/not_a_section/edit')->assertNotFound();
     $this->actingAs(editor())->put('/admin/homepage/not_a_section', ['title' => ['en' => 'x']])->assertNotFound();
 });
+
+it('places a homepage section photo on the side chosen in the editor', function () {
+    Storage::fake('public');
+    $user = editor();
+    $save = fn (string $layout) => $this->actingAs($user)->put('/admin/homepage/industries', [
+        'title' => ['en' => 'Industries we serve'], 'layout' => $layout, 'image' => UploadedFile::fake()->image('i.jpg', 800, 500),
+    ])->assertRedirect();
+
+    $save('image_left');
+    expect($this->get('/')->getContent())->toContain('data-layout="image_left"');
+    $save('banner');
+    expect($this->get('/')->getContent())->toContain('data-layout="banner"');
+    $save('image_right');
+    expect($this->get('/')->getContent())->toContain('data-layout="image_right"');
+});
+
+it('keeps the chosen photo side when a later save does not send it, and rejects unknown sides', function () {
+    Storage::fake('public');
+    $user = editor();
+    $this->actingAs($user)->put('/admin/homepage/industries', ['title' => ['en' => 'Industries'], 'layout' => 'image_left', 'image' => UploadedFile::fake()->image('i.jpg')]);
+    $this->actingAs($user)->put('/admin/homepage/industries', ['title' => ['en' => 'Industries again']]);
+
+    expect(json_decode(DB::table('homepage_sections')->where('key', 'industries')->value('content'), true)['layout'])->toBe('image_left');
+    $this->actingAs($user)->put('/admin/homepage/industries', ['title' => ['en' => 'X'], 'layout' => 'sideways'])->assertSessionHasErrors('layout');
+});
+
+it('puts a points checklist on the chosen side when there is no photo', function () {
+    $this->actingAs(editor())->put('/admin/homepage/benefits', ['title' => ['en' => 'Benefits'], 'layout' => 'image_left', 'points_en' => "Longer engine life\nCleaner engines"]);
+
+    expect($this->get('/')->getContent())->toContain('data-layout="image_left"')->toContain('Cleaner engines');
+});
+
+it('shows product pictures in a short area instead of a tall one', function () {
+    $cat = \App\Models\ProductCategory::create(['slug' => 'gear-oils', 'name' => ['en' => 'Gear Oils'], 'is_active' => true]);
+    \App\Models\Product::create(['product_category_id' => $cat->id, 'slug' => 'p1', 'sku' => 'P-1', 'name' => ['en' => 'Card Test Oil'], 'status' => 'published', 'published_at' => now()->subDay(), 'is_featured' => true]);
+
+    $this->get('/products')->assertSee('Card Test Oil')->assertSee('h-40', false)->assertDontSee('aspect-[4/5]', false);
+    $this->get('/')->assertSee('Card Test Oil')->assertDontSee('aspect-[4/5]', false);
+});

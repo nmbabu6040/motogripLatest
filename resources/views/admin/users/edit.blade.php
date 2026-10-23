@@ -1,8 +1,6 @@
 <x-layouts.admin-shell title="Edit user">
-    <form method="POST" action="{{ route('admin.users.update', $user) }}"
-        class="max-w-xl rounded-panel border border-steel bg-white p-6">
-        @csrf
-        @method('PUT')
+    <form method="POST" action="{{ route('admin.users.update', $user) }}" class="max-w-xl rounded-panel border border-steel bg-white p-6">
+        @csrf @method('PUT')
         <p class="mb-1 font-semibold">{{ $user->name }}</p>
         <p class="mb-4 text-sm">{{ $user->email }}</p>
 

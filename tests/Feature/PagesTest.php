@@ -130,3 +130,34 @@ it('shows the Pages screen with the guidance text and each page layout', functio
 
     $this->actingAs(pageEditor())->get('/admin/pages')->assertOk()->assertSee('about-us')->assertSee('Wide image on top');
 });
+
+it('gives pages the same heading bar as the other pages: a small label, the title and a short line', function () {
+    $this->actingAs(pageEditor())->post('/admin/pages', ['title' => ['en' => 'About Us'], 'slug' => 'about-us', 'status' => 'published', 'layout' => 'plain', 'seo_description' => ['en' => 'Who we are and what we do.']]);
+
+    $html = $this->get('/about-us')->assertOk()->assertSee('Who we are and what we do.')->getContent();
+    expect($html)->toContain('tracking-[0.2em]')->toContain('from-navy-deep');
+});
+
+it('saves the Bengali short line too', function () {
+    $this->actingAs(pageEditor())->post('/admin/pages', ['title' => ['en' => 'About Us', 'bn' => 'আমাদের সম্পর্কে'], 'slug' => 'about-us', 'status' => 'published', 'layout' => 'plain', 'seo_description' => ['en' => 'English line.', 'bn' => 'বাংলা লাইন।']]);
+
+    $this->get('/bn/about-us')->assertOk()->assertSee('বাংলা লাইন।');
+});
+
+it('shows a page intro line and the site name in the page banner, like the other pages', function () {
+    $this->actingAs(pageEditor())->post('/admin/pages', ['title' => ['en' => 'About Us'], 'subtitle' => ['en' => 'Who we are and what we do'], 'slug' => 'about-us', 'status' => 'published', 'layout' => 'plain']);
+
+    $this->get('/about-us')->assertOk()->assertSee('Who we are and what we do');
+    expect(Page::where('slug', 'about-us')->first()->getTranslation('subtitle', 'en'))->toBe('Who we are and what we do');
+});
+
+it('shows the intro field in the page editor and keeps it on edit', function () {
+    $user = pageEditor();
+    $this->actingAs($user)->post('/admin/pages', ['title' => ['en' => 'Story'], 'subtitle' => ['en' => 'Our story'], 'status' => 'published', 'layout' => 'plain']);
+
+    $this->get('/admin/pages/story/edit')->assertOk()->assertSee('Short intro under the title')->assertSee('Our story');
+});
+
+it('gives every page banner the same minimum height', function () {
+    $this->get('/contact')->assertOk()->assertSee('min-h-[12rem]', false);
+});

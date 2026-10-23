@@ -38,7 +38,7 @@ it('records a click, stores only a token hash, and attributes a later inquiry', 
     $aff = approvedAffiliate();
 
     $res = $this->get('/?ref=ABCDEF1234');
-    $cookie = collect($res->headers->getCookies())->firstWhere(fn($c) => $c->getName() === 'mg_ref');
+    $cookie = collect($res->headers->getCookies())->firstWhere(fn ($c) => $c->getName() === 'mg_ref');
     expect($cookie)->not->toBeNull()->and($cookie->isHttpOnly())->toBeTrue();
     // The cookie is encrypted in transit; decrypt it to compare with the stored hash.
     $plain = \Illuminate\Cookie\CookieValuePrefix::remove(app('encrypter')->decrypt($cookie->getValue(), false));
@@ -118,9 +118,6 @@ it('forbids the backup area without backups.create', function () {
 });
 
 it('refuses to back up without an archive password and records the failure', function () {
-
-    config(['backup.backup.password' => null]);
-
     $this->actingAs(User::factory()->create()->assignRole('super-admin'))->post('/admin/backups', ['type' => 'database'])->assertSessionHasErrors('type');
     expect(\DB::table('backup_records')->count())->toBe(0);
 

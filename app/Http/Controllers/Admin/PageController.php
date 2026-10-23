@@ -60,8 +60,9 @@ class PageController extends Controller
         $d = $request->validate([
             'slug' => ['nullable', 'regex:/^[a-z0-9]+(-[a-z0-9]+)*$/', 'max:120', Rule::unique('pages', 'slug')->ignore($page->id), Rule::notIn(['admin', 'login', 'logout', 'user', 'documents', 'newsletter', 'up', 'bn', 'sitemap', 'robots', 'ads', 'health', 'affiliate'])],
             'title.en' => ['required', 'string', 'max:160'], 'title.bn' => ['nullable', 'string', 'max:160'],
+            'subtitle.en' => ['nullable', 'string', 'max:200'], 'subtitle.bn' => ['nullable', 'string', 'max:200'],
             'body.en' => ['nullable', 'string', 'max:60000'], 'body.bn' => ['nullable', 'string', 'max:60000'],
-            'seo_title.en' => ['nullable', 'string', 'max:70'], 'seo_description.en' => ['nullable', 'string', 'max:170'],
+            'seo_title.en' => ['nullable', 'string', 'max:70'], 'seo_description.en' => ['nullable', 'string', 'max:170'], 'seo_description.bn' => ['nullable', 'string', 'max:170'],
             'status' => ['required', Rule::in(['draft', 'published'])],
             'layout' => ['required', Rule::in(array_keys(Page::LAYOUTS))],
             'image' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
@@ -84,6 +85,7 @@ class PageController extends Controller
         return [
             'slug' => $d['slug'] ?? $page->slug ?? Str::slug($d['title']['en']),
             'title' => $clean($d['title']),
+            'subtitle' => $clean($d['subtitle'] ?? []),
             'body' => $clean(array_map(fn ($h) => $h === null ? null : Purifier::clean($h), $d['body'] ?? [])),   // HTML is sanitised on save
             'seo_title' => $clean($d['seo_title'] ?? []), 'seo_description' => $clean($d['seo_description'] ?? []),
             'noindex' => $request->boolean('noindex'), 'status' => $d['status'],

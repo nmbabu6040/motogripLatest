@@ -11,6 +11,6 @@
             <x-button class="w-full">Continue</x-button>
         </form>
         <button type="button" class="mt-4 text-sm text-industrial underline" x-on:click="recovery = !recovery"
-            x-text="recovery ? 'Use an authentication code' : 'Use a recovery code'"></button>
+                x-text="recovery ? 'Use an authentication code' : 'Use a recovery code'"></button>
     </div>
 </x-layouts.auth-shell>

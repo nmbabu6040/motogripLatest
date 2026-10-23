@@ -17,8 +17,8 @@ class Page extends Model
         'banner' => 'Wide image on top, text below',
     ];
 
-    protected $fillable = ['slug', 'title', 'body', 'seo_title', 'seo_description', 'canonical_url', 'noindex', 'status', 'published_at', 'image', 'layout', 'show_in_menu'];
-    public array $translatable = ['title', 'body', 'seo_title', 'seo_description'];
+    protected $fillable = ['slug', 'title', 'body', 'seo_title', 'seo_description', 'canonical_url', 'noindex', 'status', 'published_at', 'image', 'layout', 'show_in_menu', 'subtitle'];
+    public array $translatable = ['title', 'subtitle', 'body', 'seo_title', 'seo_description'];
     protected $casts = ['noindex' => 'boolean', 'published_at' => 'datetime', 'show_in_menu' => 'boolean'];
 
     public function scopePublished($q) { return $q->where('status', 'published'); }

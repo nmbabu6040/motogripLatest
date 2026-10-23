@@ -10,8 +10,12 @@
             <h2 class="sm:col-span-2 text-lg font-extrabold">1. Page</h2>
             <div><label class="{{ $label }}" for="t_en">Title (English)</label><input id="t_en" name="title[en]" required value="{{ old('title.en', $page->getTranslation('title', 'en', false)) }}" class="{{ $input }}"></div>
             <div><label class="{{ $label }}" for="t_bn">Title (বাংলা, optional)</label><input id="t_bn" name="title[bn]" value="{{ old('title.bn', $page->getTranslation('title', 'bn', false)) }}" class="{{ $input }}"></div>
+            <div><label class="{{ $label }}" for="sub_en">Short intro under the title (English)</label><input id="sub_en" name="subtitle[en]" maxlength="200" value="{{ old('subtitle.en', $page->getTranslation('subtitle', 'en', false)) }}" class="{{ $input }}"></div>
+            <div><label class="{{ $label }}" for="sub_bn">Short intro (বাংলা, optional)</label><input id="sub_bn" name="subtitle[bn]" maxlength="200" value="{{ old('subtitle.bn', $page->getTranslation('subtitle', 'bn', false)) }}" class="{{ $input }}"></div>
             <div><label class="{{ $label }}" for="slug">Web address (slug)</label><input id="slug" name="slug" placeholder="about-us" value="{{ old('slug', $page->slug) }}" class="{{ $input }}"><p class="mt-1 text-xs text-ink/70">যেমন <code>about-us</code> হলে ঠিকানা হবে /about-us। ফাঁকা রাখলে শিরোনাম থেকে নিজে বানাবে।</p></div>
             <div><label class="{{ $label }}" for="status">Status</label><select id="status" name="status" class="{{ $input }}"><option value="published" @selected(old('status', $page->status) === 'published')>Published (visible)</option><option value="draft" @selected(old('status', $page->status) === 'draft')>Draft (hidden)</option></select></div>
+            <div class="sm:col-span-2"><label class="{{ $label }}" for="sd_en">Short line under the heading (English, optional)</label><input id="sd_en" name="seo_description[en]" maxlength="170" value="{{ old('seo_description.en', $page->getTranslation('seo_description', 'en', false)) }}" class="{{ $input }}"><p class="mt-1 text-xs text-ink/70">হেডিংয়ের নিচে ছোট একটি লাইন হিসেবে দেখায় এবং গুগল সার্চেও কাজে লাগে।</p></div>
+            <div class="sm:col-span-2"><label class="{{ $label }}" for="sd_bn">Short line (বাংলা, optional)</label><input id="sd_bn" name="seo_description[bn]" maxlength="170" value="{{ old('seo_description.bn', $page->getTranslation('seo_description', 'bn', false)) }}" class="{{ $input }}"></div>
             <label class="flex items-center gap-2 sm:col-span-2"><input type="checkbox" name="show_in_menu" value="1" @checked(old('show_in_menu', $page->show_in_menu))> <span>Show in the main menu <span class="text-xs text-ink/70">(মেনুতে দেখান)</span></span></label>
         </section>
 
@@ -40,7 +44,6 @@
             <summary class="cursor-pointer font-extrabold">4. Search engine details (optional)</summary>
             <div class="mt-4 grid gap-4 sm:grid-cols-2">
                 <div><label class="{{ $label }}" for="seo_t">SEO title (max 70)</label><input id="seo_t" name="seo_title[en]" value="{{ old('seo_title.en', $page->getTranslation('seo_title', 'en', false)) }}" class="{{ $input }}"></div>
-                <div><label class="{{ $label }}" for="seo_d">SEO description (max 170)</label><input id="seo_d" name="seo_description[en]" value="{{ old('seo_description.en', $page->getTranslation('seo_description', 'en', false)) }}" class="{{ $input }}"></div>
                 <label class="flex items-center gap-2"><input type="checkbox" name="noindex" value="1" @checked(old('noindex', $page->noindex))> Hide from search engines</label>
             </div>
         </details>

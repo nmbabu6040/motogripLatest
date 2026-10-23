@@ -28,12 +28,8 @@ function product(array $attrs = [], ?ProductCategory $cat = null): Product
     $n++;
 
     return Product::create(array_merge([
-        'product_category_id' => ($cat ?? category("Cat {$n}"))->id,
-        'slug' => "prod-{$n}",
-        'sku' => "SKU-{$n}",
-        'name' => ['en' => "Product {$n}"],
-        'status' => 'published',
-        'published_at' => now()->subDay(),
+        'product_category_id' => ($cat ?? category("Cat {$n}"))->id, 'slug' => "prod-{$n}", 'sku' => "SKU-{$n}",
+        'name' => ['en' => "Product {$n}"], 'status' => 'published', 'published_at' => now()->subDay(),
     ], $attrs));
 }
 
@@ -44,13 +40,8 @@ function staff(string $role): User
 
 it('lets a product manager create a product with specs, and a content manager not', function () {
     $cat = category();
-    $payload = [
-        'product_category_id' => $cat->id,
-        'sku' => 'MG-1',
-        'name' => ['en' => 'Test Oil'],
-        'status' => 'draft',
-        'specs_text' => 'Flash point: 220 °C'
-    ];
+    $payload = ['product_category_id' => $cat->id, 'sku' => 'MG-1', 'name' => ['en' => 'Test Oil'], 'status' => 'draft',
+        'specs_text' => 'Flash point: 220 °C'];
 
     $this->actingAs(staff('content-manager'))->post('/admin/products', $payload)->assertForbidden();
 
@@ -115,10 +106,8 @@ it('compares products and highlights differing rows', function () {
 it('enforces document download permissions', function () {
     Storage::fake('local');
     Storage::disk('local')->put('documents/a.pdf', '%PDF-1.4 test');
-    $mk = fn(string $vis) => Document::create(['type' => 'tds', 'title' => ['en' => "Doc {$vis}"], 'disk' => 'local', 'path' => 'documents/a.pdf', 'original_name' => 'a.pdf', 'mime' => 'application/pdf', 'size' => 12, 'checksum' => hash('sha256', $vis), 'visibility' => $vis, 'published_at' => now()->subDay()]);
-    $public = $mk('public');
-    $auth = $mk('authenticated');
-    $restricted = $mk('restricted');
+    $mk = fn (string $vis) => Document::create(['type' => 'tds', 'title' => ['en' => "Doc {$vis}"], 'disk' => 'local', 'path' => 'documents/a.pdf', 'original_name' => 'a.pdf', 'mime' => 'application/pdf', 'size' => 12, 'checksum' => hash('sha256', $vis), 'visibility' => $vis, 'published_at' => now()->subDay()]);
+    $public = $mk('public'); $auth = $mk('authenticated'); $restricted = $mk('restricted');
 
     $this->get(route('documents.download', $public))->assertOk();
     $this->get(route('documents.download', $auth))->assertRedirect(route('login'));
@@ -156,21 +145,10 @@ it('rejects non-pdf and duplicate document uploads', function () {
 
 it('saves the simple product form and shows the product on the products page and the home page', function () {
     $cat = category();
-    $payload = [
-        'product_category_id' => $cat->id,
-        'sku' => 'MG-2',
-        'name' => ['en' => 'Simple Oil'],
-        'status' => 'published',
-        'is_featured' => '1',
-        'features_text' => "Good protection\nLong life",
-        'benefits_text' => 'Saves fuel',
-        'applications_text' => 'Trucks',
-        'packaging_text' => '1 L, 4 L, 208 L',
-        'specs_text' => "Flash point: 220 °C\nPour point: -33 °C",
-        'specs_verified' => '1',
-        'approvals_text' => 'API CK-4',
-        'approvals_verified' => '1'
-    ];
+    $payload = ['product_category_id' => $cat->id, 'sku' => 'MG-2', 'name' => ['en' => 'Simple Oil'], 'status' => 'published', 'is_featured' => '1',
+        'features_text' => "Good protection\nLong life", 'benefits_text' => 'Saves fuel', 'applications_text' => 'Trucks',
+        'packaging_text' => '1 L, 4 L, 208 L', 'specs_text' => "Flash point: 220 °C\nPour point: -33 °C", 'specs_verified' => '1',
+        'approvals_text' => 'API CK-4', 'approvals_verified' => '1'];
 
     $this->actingAs(staff('product-manager'))->post('/admin/products', $payload)->assertRedirect(route('admin.products.index'));
 
@@ -178,24 +156,8 @@ it('saves the simple product form and shows the product on the products page and
     expect($p->features()->count())->toBe(4)->and($p->packaging()->count())->toBe(3)->and($p->specifications()->where('is_verified', true)->count())->toBe(2)
         ->and($p->approvals()->whereNotNull('verified_at')->count())->toBe(1)->and($p->status)->toBe('published');
 
-    // $this->get('/products')->assertSee('Simple Oil');
-    // $this->get('/')->assertSee('Simple Oil');
-
     $this->get('/products')->assertSee('Simple Oil');
-
-    // Ensure the homepage section exists and is enabled in the test database.
-    \DB::table('homepage_sections')->updateOrInsert(
-        ['key' => 'featured_products'],
-        [
-            'sort_order' => 2,
-            'is_enabled' => true,
-            'content' => json_encode([]),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]
-    );
-
-    $this->get('/')->assertOk()->assertSee('Simple Oil');
+    $this->get('/')->assertSee('Simple Oil');
     $this->get("/products/{$p->slug}")->assertSee('Flash point')->assertSee('API CK-4')->assertSee('208 L');
 });
 

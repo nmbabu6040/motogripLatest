@@ -1,6 +1,6 @@
 @php $img = $product->getFirstMedia('images'); $packs = $product->packaging->where('is_active', true); @endphp
 <article class="group card flex flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-lift motion-reduce:transition-none motion-reduce:hover:translate-y-0">
-    <a href="{{ $lr('catalog.show', ['product' => $product]) }}" class="relative block aspect-[4/5] overflow-hidden bg-gradient-to-b from-white to-surface">
+    <a href="{{ $lr('catalog.show', ['product' => $product]) }}" class="relative block h-40 overflow-hidden bg-gradient-to-b from-white to-surface sm:h-44">
         @if ($img)
             <img src="{{ $img->hasGeneratedConversion('card') ? $img->getUrl('card') : $img->getUrl() }}" alt="{{ $img->getCustomProperty('alt') ?: $product->name }}" loading="lazy" width="480" height="600" class="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none">
         @else

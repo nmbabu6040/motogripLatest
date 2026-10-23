@@ -42,7 +42,11 @@
                     <label class="mb-2 flex items-center gap-2 text-sm"><input type="checkbox" name="remove_image" value="1"> Remove this photo</label>
                 @endif
                 <input id="image" type="file" name="image" accept="image/jpeg,image/png,image/webp">
-                <p class="mt-1 text-xs text-ink/70">ছবি দিলে হোমপেজে লেখা বাঁ দিকে, ছবি ডান দিকে দেখাবে। ছবি না দিলে পয়েন্টগুলো ডান দিকে সাজানো তালিকা হিসেবে দেখাবে।</p>
+                <label class="{{ $label }} mt-4" for="layout">Photo position</label>
+                <select id="layout" name="layout" class="{{ $input }}">
+                    @foreach (['image_right' => 'Text on the left, photo on the right', 'image_left' => 'Photo on the left, text on the right', 'banner' => 'Wide photo on top, text below'] as $k => $v)<option value="{{ $k }}" @selected(old('layout', $content['layout'] ?? 'image_right') === $k)>{{ $v }}</option>@endforeach
+                </select>
+                <p class="mt-1 text-xs text-ink/70">ছবি না দিলে পয়েন্টগুলো একই পাশে সাজানো তালিকা হিসেবে দেখাবে।</p>
             </div>
         @endif
 

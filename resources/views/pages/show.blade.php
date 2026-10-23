@@ -6,7 +6,7 @@
 @endphp
 <x-layouts.public-shell :title="$page->seo_title ?: $page->title" :description="$page->seo_description" :noindex="$page->noindex || $page->status !== 'published'"
     :canonical="$page->canonical_url ?: $lr('page.show', ['page' => $page])" :image="$image ? url($image) : null" :breadcrumbs="[[__('site.home'), $lr('home')], [$page->title, $lr('page.show', ['page' => $page])]]">
-    <x-page-header :title="$page->title" />
+    <x-page-header :title="$page->title" :eyebrow="\App\Support\Settings::get('brand', 'site_name', config('app.name'))" :subtitle="$page->subtitle ?: $page->seo_description" />
 
     @can('pages.manage')
         <div class="border-b border-amber/40 bg-amber/20"><div class="container-x flex items-center justify-between py-2 text-sm font-semibold">

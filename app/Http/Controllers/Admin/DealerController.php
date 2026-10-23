@@ -52,18 +52,31 @@ class DealerController extends Controller
     private function data(Request $request, Dealer $dealer): array
     {
         $d = $request->validate([
-            'name' => ['required', 'string', 'max:160'], 'district' => ['required', 'string', 'max:80'], 'city' => ['nullable', 'string', 'max:80'],
-            'address' => ['nullable', 'string', 'max:255'], 'phone' => ['nullable', 'string', 'max:32'], 'email' => ['nullable', 'email', 'max:190'],
-            'latitude' => ['nullable', 'numeric', 'between:-90,90'], 'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'name' => ['required', 'string', 'max:160'],
+            'district' => ['required', 'string', 'max:80'],
+            'city' => ['nullable', 'string', 'max:80'],
+            'address' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:32'],
+            'email' => ['nullable', 'email', 'max:190'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'hours' => ['nullable', 'string', 'max:200'],
         ]);
 
         return [
-            'slug' => $dealer->slug ?: Str::slug($d['name']).'-'.Str::lower(Str::random(5)),
-            'name' => $d['name'], 'district' => $d['district'], 'city' => $d['city'] ?? null, 'address' => $d['address'] ?? null,
-            'phone' => $d['phone'] ?? null, 'email' => $d['email'] ?? null, 'latitude' => $d['latitude'] ?? null, 'longitude' => $d['longitude'] ?? null,
+            'slug' => $dealer->slug ?: Str::slug($d['name']) . '-' . Str::lower(Str::random(5)),
+            'name' => $d['name'],
+            'district' => $d['district'],
+            'city' => $d['city'] ?? null,
+            'address' => $d['address'] ?? null,
+            'phone' => $d['phone'] ?? null,
+            'email' => $d['email'] ?? null,
+            'latitude' => $d['latitude'] ?? null,
+            'longitude' => $d['longitude'] ?? null,
             'business_hours' => ($d['hours'] ?? null) ? ['text' => $d['hours']] : null,
-            'show_phone' => $request->boolean('show_phone'), 'show_email' => $request->boolean('show_email'), 'is_published' => $request->boolean('is_published'),
+            'show_phone' => $request->boolean('show_phone'),
+            'show_email' => $request->boolean('show_email'),
+            'is_published' => $request->boolean('is_published'),
         ];
     }
 }
