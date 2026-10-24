@@ -44,7 +44,7 @@
         ],
         'Growth' => [
             ['SEO', 'admin.seo.index', 'seo.manage', 'search'],
-            ['Affiliates', 'admin.affiliates.index', 'affiliates.manage', 'share'],
+            ['Affiliates'.(config('motogrip.features.affiliate') ? '' : ' (off)'), 'admin.affiliates.index', 'affiliates.manage', 'share'],
             ['My affiliate area', 'affiliate.dashboard', 'affiliate-area', 'share'],
         ],
         'System' => [

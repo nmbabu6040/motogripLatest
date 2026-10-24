@@ -1,6 +1,18 @@
 <x-layouts.admin-shell title="Affiliates">
     <p class="mb-4 max-w-3xl text-sm">The affiliate module is {{ config('motogrip.features.affiliate') ? 'enabled' : 'disabled' }}. This site is inquiry-based, so conversions are <strong>leads</strong> (inquiries and dealer applications), not online sales. Commissions are created only when a campaign defines a flat amount and currency; confirm your legal terms and payout method before enabling it.</p>
 
+    <section class="mb-8 max-w-5xl rounded-panel border border-steel bg-white p-6"><h2 class="text-lg font-extrabold">Add an affiliate</h2>
+        <p class="mt-1 text-sm">যাকে অ্যাফিলিয়েট করতে চান, তার একটি অ্যাকাউন্ট আগে থেকে থাকতে হবে (Admin → Users → Add user)। এখান থেকে বাছলেই সে অনুমোদিত অ্যাফিলিয়েট হয়ে নিজের লিংক পাবে। শর্তাবলী ও পেমেন্টের নিয়ম আপনি আলাদাভাবে জানিয়ে দেবেন।</p>
+        @if ($candidates->isEmpty())
+            <p class="mt-3 rounded-control bg-surface p-3 text-sm">সবাই ইতিমধ্যে অ্যাফিলিয়েট, অথবা কোনো ইউজার নেই। <a class="underline text-industrial" href="{{ route('admin.users.create') }}">নতুন ইউজার যোগ করুন</a>।</p>
+        @else
+            <form method="POST" action="{{ route('admin.affiliates.store') }}" class="mt-3 flex flex-wrap items-end gap-3">@csrf
+                <div><label class="mb-1 block text-sm font-semibold" for="user_id">Person</label>
+                    <select id="user_id" name="user_id" required class="min-w-64 rounded-control border border-steel px-3 py-2"><option value="">Choose…</option>@foreach ($candidates as $u)<option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>@endforeach</select></div>
+                <x-button>Add affiliate</x-button></form>
+        @endif
+    </section>
+
     <section class="mb-8 rounded-panel border border-steel bg-white p-6 max-w-5xl"><h2 class="text-lg font-extrabold">Affiliates</h2>
         <table class="mt-3 w-full text-left text-sm"><thead class="bg-surface"><tr><th class="p-2">Name</th><th class="p-2">Code</th><th class="p-2">Status</th><th class="p-2">Clicks</th><th class="p-2">Conversions</th><th class="p-2"><span class="sr-only">Actions</span></th></tr></thead>
             <tbody>@forelse ($affiliates as $a)<tr class="border-t border-steel"><td class="p-2">{{ $a->user?->name }}</td><td class="p-2 font-mono">{{ $a->code }}</td><td class="p-2">{{ ucfirst($a->status) }}</td><td class="p-2">{{ $a->clicks_count }}</td><td class="p-2">{{ $a->conversions_count }}</td>

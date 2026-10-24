@@ -102,15 +102,18 @@ Route::middleware(['web', SecurityHeaders::class, 'auth', 'verified', EnsureAcco
         Route::get('reports/data', [Admin\ReportController::class, 'data'])->name('reports.data');
         Route::get('reports/export', [Admin\ReportController::class, 'export'])->name('reports.export');
 
-        // Affiliates (feature-flagged)
-        Route::middleware([EnsureAffiliateEnabled::class, 'can:affiliates.manage'])->prefix('affiliates')->name('affiliates.')->group(function () {
+        // Affiliates: the page always opens (it explains how to switch the module on); every action needs the module enabled.
+        Route::middleware('can:affiliates.manage')->prefix('affiliates')->name('affiliates.')->group(function () {
             Route::get('/', [Admin\AffiliateController::class, 'index'])->name('index');
-            Route::get('export', [Admin\AffiliateController::class, 'export'])->name('export');
-            Route::put('{affiliate}/status', [Admin\AffiliateController::class, 'setStatus'])->name('status');
-            Route::post('campaigns', [Admin\AffiliateController::class, 'storeCampaign'])->name('campaigns.store');
-            Route::post('campaigns/{campaign}/toggle', [Admin\AffiliateController::class, 'toggleCampaign'])->name('campaigns.toggle');
-            Route::put('conversions/{conversion}', [Admin\AffiliateController::class, 'decide'])->name('decide');
-            Route::post('commissions/{commission}/paid', [Admin\AffiliateController::class, 'markPaid'])->name('paid');
+            Route::middleware(EnsureAffiliateEnabled::class)->group(function () {
+                Route::post('/', [Admin\AffiliateController::class, 'store'])->name('store');
+                Route::get('export', [Admin\AffiliateController::class, 'export'])->name('export');
+                Route::put('{affiliate}/status', [Admin\AffiliateController::class, 'setStatus'])->name('status');
+                Route::post('campaigns', [Admin\AffiliateController::class, 'storeCampaign'])->name('campaigns.store');
+                Route::post('campaigns/{campaign}/toggle', [Admin\AffiliateController::class, 'toggleCampaign'])->name('campaigns.toggle');
+                Route::put('conversions/{conversion}', [Admin\AffiliateController::class, 'decide'])->name('decide');
+                Route::post('commissions/{commission}/paid', [Admin\AffiliateController::class, 'markPaid'])->name('paid');
+            });
         });
 
         // Backups: viewing and creating need backups.create. Restore is CLI-only by design.

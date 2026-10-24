@@ -7,20 +7,50 @@ use App\Models\Affiliate;
 use App\Models\AffiliateCampaign;
 use App\Models\AffiliateCommission;
 use App\Models\AffiliateConversion;
+use App\Models\User;
+use App\Services\RoleGuard;
 use App\Support\Csv;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class AffiliateController extends Controller
 {
     public function index()
     {
+        if (! config('motogrip.features.affiliate')) {
+            return view('admin.affiliates.disabled');
+        }
+
         return view('admin.affiliates.index', [
+            'candidates' => User::whereNotIn('id', Affiliate::pluck('user_id'))->orderBy('name')->get(['id', 'name', 'email']),
             'affiliates' => Affiliate::with('user')->withCount(['clicks', 'conversions'])->latest()->get(),
             'campaigns' => AffiliateCampaign::latest()->get(),
             'conversions' => AffiliateConversion::with(['affiliate.user', 'commission'])->latest()->limit(50)->get(),
         ]);
+    }
+
+    /** Adds a person as an approved affiliate (and gives them the affiliate role) without waiting for them to apply. */
+    public function store(Request $request, RoleGuard $guard)
+    {
+        $d = $request->validate(['user_id' => ['required', Rule::exists('users', 'id'), Rule::unique('affiliates', 'user_id')]]);
+        $user = User::findOrFail($d['user_id']);
+        abort_unless($guard->canModify($request->user(), $user), 403);
+
+        $affiliate = DB::transaction(function () use ($user) {
+            do {
+                $code = Str::upper(Str::random(10));
+            } while (Affiliate::where('code', $code)->exists());
+
+            $user->assignRole('affiliate');
+
+            return Affiliate::create(['user_id' => $user->id, 'code' => $code, 'status' => 'approved']);
+        });
+
+        activity('admin')->causedBy($request->user())->performedOn($affiliate)->log('affiliate.added');
+
+        return back()->with('status', $user->name.' is now an approved affiliate. Their link is on their Affiliate page.');
     }
 
     public function setStatus(Request $request, Affiliate $affiliate)

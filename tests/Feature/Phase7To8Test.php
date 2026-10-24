@@ -27,8 +27,12 @@ function approvedAffiliate(): Affiliate
 
 // ---- Phase 7: affiliates, reports, exports ---------------------------------------------
 
-it('keeps the affiliate module switched off by default', function () {
-    $this->actingAs(User::factory()->create()->assignRole('super-admin'))->get('/admin/affiliates')->assertNotFound();
+it('keeps the affiliate module switched off by default, with a friendly page instead of an error', function () {
+    $admin = User::factory()->create()->assignRole('super-admin');
+
+    $this->actingAs($admin)->get('/admin/affiliates')->assertOk()->assertSee('switched off')->assertSee('MOTOGRIP_FEATURE_AFFILIATE=true');
+    $this->actingAs($admin)->get('/admin/affiliates/export')->assertNotFound();
+    $this->actingAs($admin)->post('/admin/affiliates', ['user_id' => $admin->id])->assertNotFound();
     $this->get('/?ref=ABCDEF1234');
     expect(ReferralClick::count())->toBe(0);
 });
@@ -171,4 +175,36 @@ it('rejects public registration and unauthenticated admin writes', function () {
 
 it('stops non-super-admins from toggling maintenance mode', function () {
     $this->actingAs(User::factory()->create()->assignRole('administrator'))->post('/admin/settings/maintenance', ['confirm' => '1'])->assertForbidden();
+});
+
+it('lets an admin add an approved affiliate straight from the admin page', function () {
+    config(['motogrip.features.affiliate' => true]);
+    $admin = User::factory()->create()->assignRole('marketing-manager');
+    $person = User::factory()->create()->assignRole('customer');
+
+    $this->actingAs($admin)->get('/admin/affiliates')->assertOk()->assertSee('Add an affiliate')->assertSee($person->email);
+    $this->actingAs($admin)->post('/admin/affiliates', ['user_id' => $person->id])->assertRedirect();
+
+    $affiliate = Affiliate::where('user_id', $person->id)->first();
+    expect($affiliate->status)->toBe('approved')->and($affiliate->code)->toMatch('/^[A-Z0-9]{10}$/')->and($person->fresh()->hasRole('affiliate'))->toBeTrue();
+
+    $this->actingAs($person->fresh())->get('/affiliate')->assertOk()->assertSee('?ref='.$affiliate->code);
+});
+
+it('does not add the same affiliate twice and checks permissions', function () {
+    config(['motogrip.features.affiliate' => true]);
+    $person = User::factory()->create();
+
+    $this->actingAs(User::factory()->create()->assignRole('marketing-manager'))->post('/admin/affiliates', ['user_id' => $person->id])->assertRedirect();
+    $this->actingAs(User::factory()->create()->assignRole('marketing-manager'))->post('/admin/affiliates', ['user_id' => $person->id])->assertSessionHasErrors('user_id');
+    expect(Affiliate::count())->toBe(1);
+
+    $this->actingAs(User::factory()->create()->assignRole('sales-manager'))->get('/admin/affiliates')->assertForbidden();
+});
+
+it('stops an admin from turning a higher-privileged account into an affiliate', function () {
+    config(['motogrip.features.affiliate' => true]);
+    $super = User::factory()->create()->assignRole('super-admin');
+
+    $this->actingAs(User::factory()->create()->assignRole('marketing-manager'))->post('/admin/affiliates', ['user_id' => $super->id])->assertForbidden();
 });

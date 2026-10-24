@@ -9,34 +9,10 @@ class Dealer extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = [
-        'dealer_application_id',
-        'slug',
-        'name',
-        'district',
-        'city',
-        'address',
-        'phone',
-        'email',
-        'show_phone',
-        'show_email',
-        'latitude',
-        'longitude',
-        'business_hours',
-        'is_published'
-    ];
-    protected $casts = [
-        'show_phone' => 'boolean',
-        'show_email' => 'boolean',
-        'is_published' => 'boolean',
-        'latitude' => 'float',
-        'longitude' => 'float'
-    ];
+    protected $fillable = ['dealer_application_id', 'slug', 'name', 'district', 'city', 'address', 'phone', 'email', 'show_phone', 'show_email', 'latitude', 'longitude', 'business_hours', 'is_published'];
+    protected $casts = ['show_phone' => 'boolean', 'show_email' => 'boolean', 'is_published' => 'boolean', 'latitude' => 'float', 'longitude' => 'float', 'business_hours' => 'array'];
 
-    public function scopePublished($q)
-    {
-        return $q->where('is_published', true);
-    }
+    public function scopePublished($q) { return $q->where('is_published', true); }
 
     public function mapUrl(): ?string
     {
