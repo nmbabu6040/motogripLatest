@@ -9,6 +9,7 @@ use App\Http\Controllers\DealerApplicationController;
 use App\Http\Controllers\DealerLocatorController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\ResourceCenterController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
@@ -39,6 +40,8 @@ Route::get('blog/{post}', [BlogController::class, 'show'])->name('blog.show');
 Route::post('blog/{post}/like', [BlogEngagementController::class, 'like'])->middleware('throttle:20,1')->name('blog.like');
 Route::post('blog/{post}/comments', [BlogEngagementController::class, 'comment'])->middleware('throttle:5,5')->name('blog.comment');
 Route::post('comments/{comment}/report', [BlogEngagementController::class, 'report'])->middleware('throttle:5,10')->name('blog.comment.report');
+
+Route::get('recommended', [PartnerController::class, 'index'])->name('partners.index');
 
 // CMS pages (privacy policy, about, terms). Must stay last so it never shadows a real route.
 Route::get('{page}', [PageController::class, 'show'])->where('page', '(?!bn$)[a-z0-9]+(-[a-z0-9]+)*')->name('page.show');

@@ -66,5 +66,30 @@ Alpine.data('share', (url, title) => ({
 
 Alpine.data('productForm', (init) => ({ features: init.features, packaging: init.packaging, specs: init.specs, approvals: init.approvals }));
 
+// Sale and purchase line editor (items, quantities, prices, live totals).
+Alpine.data('erpLines', (cfg) => ({
+    items: cfg.items, mode: cfg.mode, discount: cfg.discount ?? 0, tax: cfg.tax ?? 0,
+    rows: (cfg.rows && cfg.rows.length ? cfg.rows : [{ stock_item_id: '', quantity: 1, price: '' }]),
+    find(id) { return this.items.find((i) => String(i.id) === String(id)); },
+    pick(row) { const it = this.find(row.stock_item_id); if (it && (row.price === '' || row.price === null)) row.price = this.mode === 'sale' ? it.price : it.cost; },
+    over(row) { const it = this.find(row.stock_item_id); return !!it && (Number(row.quantity) || 0) > it.stock; },
+    add() { this.rows.push({ stock_item_id: '', quantity: 1, price: '' }); },
+    remove(i) { this.rows.splice(i, 1); if (!this.rows.length) this.add(); },
+    get subtotal() { return this.rows.reduce((s, r) => s + (Number(r.quantity) || 0) * (Number(r.price) || 0), 0); },
+    get discountValue() { return Math.min(Math.max(Number(this.discount) || 0, 0), this.subtotal); },
+    get taxValue() { return (this.subtotal - this.discountValue) * Math.min(Math.max(Number(this.tax) || 0, 0), 100) / 100; },
+    get total() { return this.subtotal - this.discountValue + this.taxValue; },
+    money(n) { return cfg.symbol + ' ' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
+}));
+
+// Counts a click on a recommended (affiliate) link. The visitor still goes straight to the store.
+document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[data-partner-click]');
+    if (!a) return;
+    try {
+        fetch(a.dataset.partnerClick, { method: 'POST', keepalive: true, headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '', Accept: 'application/json' } });
+    } catch { /* counting is best-effort */ }
+});
+
 window.Alpine = Alpine;
 Alpine.start();

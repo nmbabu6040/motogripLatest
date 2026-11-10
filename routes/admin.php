@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\Admin\Erp;
 use App\Http\Controllers\AffiliateDashboardController;
 use App\Http\Middleware\EnsureAccountActive;
 use App\Http\Middleware\EnsureAffiliateEnabled;
@@ -97,6 +98,56 @@ Route::middleware(['web', SecurityHeaders::class, 'auth', 'verified', EnsureAcco
             Route::post('redirects', [Admin\SeoController::class, 'storeRedirect'])->name('redirects.store');
             Route::delete('redirects/{redirect}', [Admin\SeoController::class, 'destroyRedirect'])->name('redirects.destroy');
         });
+
+        // Stock, purchases, sales, returns, challans (business accounts)
+        Route::middleware('can:inventory.view')->group(function () {
+            Route::get('stock', [Erp\StockController::class, 'index'])->name('stock.index');
+            Route::get('stock/{stockItem}', [Erp\StockController::class, 'show'])->whereNumber('stockItem')->name('stock.show');
+        });
+        Route::middleware('can:inventory.manage')->group(function () {
+            Route::post('stock/sync', [Erp\StockController::class, 'sync'])->name('stock.sync');
+            Route::put('stock/{stockItem}', [Erp\StockController::class, 'update'])->whereNumber('stockItem')->name('stock.update');
+            Route::post('stock/{stockItem}/adjust', [Erp\StockController::class, 'adjust'])->whereNumber('stockItem')->name('stock.adjust');
+        });
+        Route::middleware('can:parties.manage')->prefix('parties')->name('parties.')->group(function () {
+            Route::get('{kind}', [Erp\PartyController::class, 'index'])->where('kind', 'customer|supplier')->name('index');
+            Route::post('{kind}', [Erp\PartyController::class, 'store'])->where('kind', 'customer|supplier')->name('store');
+            Route::get('{party}/edit', [Erp\PartyController::class, 'edit'])->whereNumber('party')->name('edit');
+            Route::put('{party}', [Erp\PartyController::class, 'update'])->whereNumber('party')->name('update');
+            Route::delete('{party}', [Erp\PartyController::class, 'destroy'])->whereNumber('party')->name('destroy');
+        });
+        Route::middleware('can:purchases.manage')->group(function () {
+            Route::get('purchases', [Erp\PurchaseController::class, 'index'])->name('purchases.index');
+            Route::get('purchases/create', [Erp\PurchaseController::class, 'create'])->name('purchases.create');
+            Route::post('purchases', [Erp\PurchaseController::class, 'store'])->name('purchases.store');
+            Route::get('purchases/{purchase}', [Erp\PurchaseController::class, 'show'])->whereNumber('purchase')->name('purchases.show');
+            Route::post('purchases/{purchase}/payments', [Erp\PurchaseController::class, 'pay'])->whereNumber('purchase')->name('purchases.pay');
+            Route::post('purchases/{purchase}/void', [Erp\PurchaseController::class, 'void'])->whereNumber('purchase')->name('purchases.void');
+            Route::get('purchases/{purchase}/returns/create', [Erp\ReturnController::class, 'purchaseCreate'])->whereNumber('purchase')->name('purchases.returns.create');
+            Route::post('purchases/{purchase}/returns', [Erp\ReturnController::class, 'purchaseStore'])->whereNumber('purchase')->name('purchases.returns.store');
+            Route::get('purchase-returns', [Erp\ReturnController::class, 'purchaseIndex'])->name('purchase-returns.index');
+            Route::get('purchase-returns/{purchaseReturn}', [Erp\ReturnController::class, 'purchaseShow'])->whereNumber('purchaseReturn')->name('purchase-returns.show');
+        });
+        Route::middleware('can:sales.manage')->group(function () {
+            Route::get('sales', [Erp\SaleController::class, 'index'])->name('sales.index');
+            Route::get('sales/create', [Erp\SaleController::class, 'create'])->name('sales.create');
+            Route::post('sales', [Erp\SaleController::class, 'store'])->name('sales.store');
+            Route::get('sales/{sale}', [Erp\SaleController::class, 'show'])->whereNumber('sale')->name('sales.show');
+            Route::post('sales/{sale}/payments', [Erp\SaleController::class, 'pay'])->whereNumber('sale')->name('sales.pay');
+            Route::post('sales/{sale}/void', [Erp\SaleController::class, 'void'])->whereNumber('sale')->name('sales.void');
+            Route::get('sales/{sale}/returns/create', [Erp\ReturnController::class, 'saleCreate'])->whereNumber('sale')->name('sales.returns.create');
+            Route::post('sales/{sale}/returns', [Erp\ReturnController::class, 'saleStore'])->whereNumber('sale')->name('sales.returns.store');
+            Route::get('sale-returns', [Erp\ReturnController::class, 'saleIndex'])->name('sale-returns.index');
+            Route::get('sale-returns/{saleReturn}', [Erp\ReturnController::class, 'saleShow'])->whereNumber('saleReturn')->name('sale-returns.show');
+            Route::get('challans', [Erp\ChallanController::class, 'index'])->name('challans.index');
+            Route::get('sales/{sale}/challans/create', [Erp\ChallanController::class, 'create'])->whereNumber('sale')->name('sales.challans.create');
+            Route::post('sales/{sale}/challans', [Erp\ChallanController::class, 'store'])->whereNumber('sale')->name('sales.challans.store');
+            Route::get('challans/{challan}', [Erp\ChallanController::class, 'show'])->whereNumber('challan')->name('challans.show');
+        });
+        Route::get('charts/{metric}', Erp\ChartController::class)->name('charts');
+
+        // Recommended products (outbound Amazon / AliExpress links)
+        Route::middleware('can:partners.manage')->group(fn () => Route::resource('partner-links', Admin\PartnerLinkController::class)->except('show'));
 
         // Reports
         Route::get('reports/data', [Admin\ReportController::class, 'data'])->name('reports.data');

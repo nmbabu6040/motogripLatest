@@ -4,11 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex,nofollow">
+    @if ($authIcon = \App\Support\Settings::get('brand', 'admin_icon_url') ?: \App\Support\Settings::get('brand', 'favicon_url'))<link rel="icon" href="{{ $authIcon }}">@endif
     <title>{{ $title ?? 'Sign in' }} | {{ \App\Support\Settings::get('brand', 'site_name', config('app.name')) }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-surface flex items-center justify-center p-4">
     <main class="w-full max-w-md bg-white rounded-panel border border-steel p-8">
+        @if ($authLogo = \App\Support\Settings::get('brand', 'admin_logo_url') ?: \App\Support\Settings::get('brand', 'logo_url'))<img src="{{ $authLogo }}" alt="" class="mb-5 h-12 w-auto">@endif
         <h1 class="text-2xl font-extrabold text-navy">{{ $title ?? 'Sign in' }}</h1>
 
         @if (session('status'))

@@ -11,6 +11,7 @@ return [
 
     'backups' => [
         'disk' => env('BACKUP_DISK', 'backups'),
+        'archive_password' => env('BACKUP_ARCHIVE_PASSWORD'),
         'keep_days' => 30,
     ],
 

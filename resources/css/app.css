@@ -86,3 +86,23 @@
   .float-slow, .marquee-track { animation: none; }
   *, ::before, ::after { transition-duration: 0.01ms !important; }
 }
+
+
+/* ---- Motion for the admin dashboard (switched off for people who prefer reduced motion) ---- */
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@keyframes drift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(14px, -10px); } }
+
+.anim-rise { animation: rise 0.65s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 70ms); }
+.kpi { position: relative; overflow: hidden; transition: transform 0.25s ease, box-shadow 0.25s ease; }
+.kpi::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--accent, #174A7E); }
+.kpi::after { content: ""; position: absolute; right: -2rem; top: -2rem; height: 7rem; width: 7rem; border-radius: 9999px; background: var(--accent, #174A7E); opacity: 0.08; transition: transform 0.4s ease; }
+.kpi:hover { transform: translateY(-4px); box-shadow: 0 14px 28px -14px rgb(16 43 89 / 0.35); }
+.kpi:hover::after { transform: scale(1.35); }
+.skeleton { background: linear-gradient(90deg, #eef1f5 25%, #f8f9fb 37%, #eef1f5 63%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; border-radius: 0.5rem; }
+.hero-glow { animation: drift 9s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-rise, .skeleton, .hero-glow { animation: none !important; }
+  .kpi, .kpi::after { transition: none; }
+}

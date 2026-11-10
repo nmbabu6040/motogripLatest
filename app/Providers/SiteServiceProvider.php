@@ -29,6 +29,7 @@ class SiteServiceProvider extends ServiceProvider
                 'footerCategories' => $categories,
                 'footerPages' => $pages,
                 'siteName' => Settings::get('brand', 'site_name', config('app.name')),
+                'hasPartners' => \Illuminate\Support\Facades\Cache::remember('partners.exist', 300, fn () => DB::table('partner_links')->where('is_published', true)->exists()),
                 'alternates' => Lang::alternates(),
             ]);
         });
@@ -43,7 +44,7 @@ class SiteServiceProvider extends ServiceProvider
             'filesystems.disks.backups' => ['driver' => 'local', 'root' => storage_path('app/backups'), 'throw' => true],
             'backup.backup.name' => 'motogrip',
             'backup.backup.destination.disks' => [$disk],
-            'backup.backup.password' => env('BACKUP_ARCHIVE_PASSWORD'),
+            'backup.backup.password' => config('motogrip.backups.archive_password'),
             'backup.backup.encryption' => 'default',
             'backup.backup.database_dump_compressor' => null,
             'backup.backup.source.files.include' => [storage_path('app/public'), storage_path('app/private')],

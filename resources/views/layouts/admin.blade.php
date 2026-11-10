@@ -19,6 +19,11 @@
         'db' => 'M4 6c0-2 16-2 16 0v12c0 2-16 2-16 0zM4 12c0 2 16 2 16 0',
         'clock' => 'M12 3a9 9 0 100 18 9 9 0 000-18zM12 7v5l3 2',
         'help' => 'M12 3a9 9 0 100 18 9 9 0 000-18zM9.5 9a2.5 2.5 0 115 0c0 1.5-2.5 2-2.5 3.5M12 17h.01',
+        'box2' => 'M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10',
+        'cash' => 'M3 7h18v10H3zM12 10a2 2 0 100 4 2 2 0 000-4zM6 10v4M18 10v4',
+        'cart' => 'M3 4h2l2.4 10h9.2L19 7H7M9 19a1 1 0 100 2 1 1 0 000-2zM17 19a1 1 0 100 2 1 1 0 000-2z',
+        'truck' => 'M3 6h11v9H3zM14 9h4l3 3v3h-7zM7 18a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM17 18a1.5 1.5 0 100 3 1.5 1.5 0 000-3z',
+        'undo' => 'M9 7L4 12l5 5M4 12h10a5 5 0 010 10h-2',
         'lock' => 'M6 11h12v10H6zM8 11V7a4 4 0 118 0v4',
     ];
     // [label, route, permission|null, icon]
@@ -28,6 +33,16 @@
             ['Products', 'admin.products.index', 'products.view', 'box'],
             ['Categories', 'admin.categories.index', 'products.view', 'folder'],
             ['Documents (TDS/SDS)', 'admin.documents.index', 'documents.manage', 'file'],
+        ],
+        'Stock and accounts' => [
+            ['Stock', 'admin.stock.index', 'inventory.view', 'box2'],
+            ['Sales and invoices', 'admin.sales.index', 'sales.manage', 'cash'],
+            ['Sale returns', 'admin.sale-returns.index', 'sales.manage', 'undo'],
+            ['Challans', 'admin.challans.index', 'sales.manage', 'truck'],
+            ['Purchases', 'admin.purchases.index', 'purchases.manage', 'cart'],
+            ['Purchase returns', 'admin.purchase-returns.index', 'purchases.manage', 'undo'],
+            ['Customers', 'admin.parties.index', 'parties.manage', 'user', ['customer']],
+            ['Suppliers', 'admin.parties.index', 'parties.manage', 'pin', ['supplier']],
         ],
         'Sales' => [
             ['Inquiries', 'admin.inquiries.index', 'inquiries.manage', 'mail'],
@@ -44,6 +59,7 @@
         ],
         'Growth' => [
             ['SEO', 'admin.seo.index', 'seo.manage', 'search'],
+            ['Recommended links', 'admin.partner-links.index', 'partners.manage', 'share'],
             ['Affiliates'.(config('motogrip.features.affiliate') ? '' : ' (off)'), 'admin.affiliates.index', 'affiliates.manage', 'share'],
             ['My affiliate area', 'affiliate.dashboard', 'affiliate-area', 'share'],
         ],
@@ -60,7 +76,8 @@
         ? (config('motogrip.features.affiliate') && $user->hasRole('affiliate'))
         : (! $perm || $user->can($perm));
     $siteName = \App\Support\Settings::get('brand', 'site_name', config('app.name'));
-    $logo = \App\Support\Settings::get('brand', 'logo_url');
+    $logo = \App\Support\Settings::get('brand', 'admin_logo_url') ?: \App\Support\Settings::get('brand', 'logo_url');
+    $icon = \App\Support\Settings::get('brand', 'admin_icon_url') ?: \App\Support\Settings::get('brand', 'favicon_url');
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -68,6 +85,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex,nofollow">
+    @if ($icon)<link rel="icon" href="{{ $icon }}">@endif
+    <style>@media print { aside, header, .no-print { display: none !important; } main { padding: 0 !important; } body { background: #fff !important; } }</style>
     <title>{{ $title ?? 'Admin' }} | {{ $siteName }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin.js'])
 </head>
@@ -94,10 +113,11 @@
                 @if ($visible->isNotEmpty())
                     @if ($heading)<p class="mb-1 mt-5 px-3 text-xs font-semibold uppercase tracking-wider text-white/50">{{ $heading }}</p>@endif
                     <ul class="space-y-0.5">
-                        @foreach ($visible as [$label, $route, $perm, $icon])
-                            @php $active = request()->routeIs($route) || (str_ends_with($route, '.index') && request()->routeIs(substr($route, 0, -6).'.*')); @endphp
+                        @foreach ($visible as $navItem)
+                            @php [$label, $route, $perm, $icon] = $navItem; $params = $navItem[4] ?? []; @endphp
+                            @php $active = $params ? (request()->routeIs($route) && request()->route('kind') === $params[0]) : (request()->routeIs($route) || (str_ends_with($route, '.index') && request()->routeIs(substr($route, 0, -6).'.*'))); @endphp
                             <li>
-                                <a href="{{ route($route) }}" @if ($active) aria-current="page" @endif
+                                <a href="{{ route($route, $params) }}" @if ($active) aria-current="page" @endif
                                    class="group flex items-center gap-3 rounded-control border-l-4 px-3 py-2 text-sm transition-colors {{ $active ? 'border-amber bg-white/10 font-semibold text-white' : 'border-transparent text-white/80 hover:bg-white/5 hover:text-white' }}">
                                     <svg class="h-5 w-5 shrink-0 {{ $active ? 'text-amber' : 'text-white/60 group-hover:text-white' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ $icons[$icon] }}"/></svg>
                                     <span>{{ $label }}</span>

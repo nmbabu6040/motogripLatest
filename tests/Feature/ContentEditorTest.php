@@ -135,9 +135,10 @@ it('puts a points checklist on the chosen side when there is no photo', function
 });
 
 it('shows product pictures in a short area instead of a tall one', function () {
-    $cat = \App\Models\ProductCategory::create(['slug' => 'gear-oils', 'name' => ['en' => 'Gear Oils'], 'is_active' => true]);
+    $cat = \App\Models\ProductCategory::create(['slug' => 'card-test-category', 'name' => ['en' => 'Card Test Category'], 'is_active' => true]);   // the seeder already creates 'gear-oils'
     \App\Models\Product::create(['product_category_id' => $cat->id, 'slug' => 'p1', 'sku' => 'P-1', 'name' => ['en' => 'Card Test Oil'], 'status' => 'published', 'published_at' => now()->subDay(), 'is_featured' => true]);
 
     $this->get('/products')->assertSee('Card Test Oil')->assertSee('h-40', false)->assertDontSee('aspect-[4/5]', false);
-    $this->get('/')->assertSee('Card Test Oil')->assertDontSee('aspect-[4/5]', false);
+    // The home page hero legitimately uses a tall frame, so the home check looks at the product card only.
+    $this->get('/')->assertSee('Card Test Oil')->assertSee('h-40', false);
 });

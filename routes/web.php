@@ -21,6 +21,7 @@ Route::get('sitemap.xml', [SeoFilesController::class, 'sitemap']);
 Route::middleware(['web', SecurityHeaders::class])->group(function () {
     Route::get('documents/{document}', DocumentDownloadController::class)->middleware('throttle:60,1')->name('documents.download');
 
+    Route::post('recommended/{partnerLink}/click', [\App\Http\Controllers\PartnerController::class, 'click'])->middleware('throttle:30,1')->name('partners.click');
     Route::post('newsletter', [NewsletterController::class, 'subscribe'])->middleware('throttle:5,10')->name('newsletter.subscribe');
     Route::get('newsletter/confirm/{subscriber}', [NewsletterController::class, 'confirm'])->middleware('signed')->name('newsletter.confirm');
     Route::get('newsletter/unsubscribe/{subscriber}', [NewsletterController::class, 'unsubscribe'])->middleware('signed')->name('newsletter.unsubscribe');

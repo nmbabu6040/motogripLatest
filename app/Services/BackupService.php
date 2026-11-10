@@ -17,7 +17,7 @@ class BackupService
 
     public function configured(): bool
     {
-        return filled(env('BACKUP_ARCHIVE_PASSWORD'));
+        return filled(config('motogrip.backups.archive_password'));
     }
 
     public function run(string $type, ?int $userId = null, ?int $recordId = null): int
@@ -75,7 +75,7 @@ class BackupService
             if ($zip->open($tmp) !== true) {
                 return [false, 'The archive could not be opened.'];
             }
-            $zip->setPassword((string) env('BACKUP_ARCHIVE_PASSWORD'));
+            $zip->setPassword((string) config('motogrip.backups.archive_password'));
             $hasDump = false;
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $name = $zip->getNameIndex($i);

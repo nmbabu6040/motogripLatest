@@ -144,6 +144,7 @@ it('rejects non-pdf and duplicate document uploads', function () {
 });
 
 it('saves the simple product form and shows the product on the products page and the home page', function () {
+    $this->seed(\Database\Seeders\HomepageSectionSeeder::class);   // the home page only shows sections that exist in the database
     $cat = category();
     $payload = ['product_category_id' => $cat->id, 'sku' => 'MG-2', 'name' => ['en' => 'Simple Oil'], 'status' => 'published', 'is_featured' => '1',
         'features_text' => "Good protection\nLong life", 'benefits_text' => 'Saves fuel', 'applications_text' => 'Trucks',

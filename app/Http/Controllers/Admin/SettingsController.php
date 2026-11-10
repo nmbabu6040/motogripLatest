@@ -52,6 +52,16 @@ class SettingsController extends Controller
             'ads_slot_in_article' => ['ads', 'slot_in_article', 'In-article ad unit ID', 'text', ['nullable', 'regex:/^[0-9]{6,20}$/']],
             'ads_slot_footer' => ['ads', 'slot_footer', 'Footer ad unit ID', 'text', ['nullable', 'regex:/^[0-9]{6,20}$/']],
         ],
+        'Business and invoices' => [
+            'erp_currency' => ['erp', 'currency', 'Currency symbol shown on invoices and reports (e.g. ৳)', 'text', ['nullable', 'string', 'max:8']],
+            'erp_tax_percent' => ['erp', 'tax_percent', 'Default VAT / tax % added to new sales (0 for none)', 'text', ['nullable', 'numeric', 'between:0,100']],
+            'erp_tax_id' => ['erp', 'tax_id', 'VAT / BIN number printed on invoices (optional)', 'text', ['nullable', 'string', 'max:60']],
+            'erp_invoice_note' => ['erp', 'invoice_note', 'Note printed at the bottom of invoices (for example payment details)', 'text', ['nullable', 'string', 'max:300']],
+        ],
+        'Recommended products (affiliate links)' => [
+            'partners_disclosure' => ['partners', 'disclosure', 'Disclosure shown above the recommended links', 'text', ['nullable', 'string', 'max:300']],
+            'partners_amazon_statement' => ['partners', 'amazon_statement', 'Amazon statement (copy the exact wording from your Amazon Associates agreement)', 'text', ['nullable', 'string', 'max:300']],
+        ],
     ];
 
     /** [setting key, label, extensions]. Stored on the public disk under a random name. */
@@ -61,6 +71,8 @@ class SettingsController extends Controller
         'hero_image_url' => ['Homepage hero image', 'png,jpg,jpeg,webp'],
         'social_image_url' => ['Default social sharing image', 'png,jpg,jpeg,webp'],
         'default_product_image_url' => ['Default product image', 'png,jpg,jpeg,webp'],
+        'admin_logo_url' => ['Admin panel logo (sidebar and sign-in page)', 'png,jpg,jpeg,webp'],
+        'admin_icon_url' => ['Admin browser-tab icon', 'png,ico,webp'],
     ];
 
     public function edit()

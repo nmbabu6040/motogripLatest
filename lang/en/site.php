@@ -56,4 +56,5 @@ return [
     'explore_range_title' => 'Explore the full range',
     'explore_range_text' => 'Engine oils, gear oils, hydraulic oils, greases and more. Browse every product and send an inquiry.',
     'edit_page' => 'Edit this page',
+    'recommended' => 'Recommended products', 'recommended_intro' => 'Tools and accessories we think are useful. These links go to other stores.', 'view_on' => 'View on :store',
 ];

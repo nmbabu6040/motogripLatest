@@ -20,6 +20,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo :title="$title" :description="$description" :canonical="$canonical" :image="$image" :noindex="$noindex" :type="$type" :alternates="$alternates" />
     @if ($favicon = \App\Support\Settings::get('brand', 'favicon_url'))<link rel="icon" href="{{ $favicon }}">@endif
     @if ($v = \App\Support\Settings::get('integrations', 'search_console_token'))<meta name="google-site-verification" content="{{ $v }}">@endif
@@ -134,6 +135,7 @@
                 <li><a class="transition hover:text-amber" href="{{ $lr('resources.index') }}">{{ __('site.resources') }}</a></li>
                 <li><a class="transition hover:text-amber" href="{{ $lr('dealers.index') }}">{{ __('site.dealers') }}</a></li>
                 <li><a class="transition hover:text-amber" href="{{ $lr('blog.index') }}">{{ __('site.blog') }}</a></li>
+                @if ($hasPartners)<li><a class="transition hover:text-amber" href="{{ $lr('partners.index') }}">{{ __('site.recommended') }}</a></li>@endif
                 <li><a class="transition hover:text-amber" href="{{ $lr('contact.create') }}">{{ __('site.contact') }}</a></li>
             </ul>
         </div>

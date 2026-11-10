@@ -57,7 +57,7 @@ class BackupRestore extends Command
             fclose($out);
             $zip = new ZipArchive;
             $zip->open($tmp);
-            $zip->setPassword((string) env('BACKUP_ARCHIVE_PASSWORD'));
+            $zip->setPassword((string) config('motogrip.backups.archive_password'));
             $dump = null;
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 if (str_starts_with($zip->getNameIndex($i), 'db-dumps/')) { $dump = $zip->getNameIndex($i); break; }
