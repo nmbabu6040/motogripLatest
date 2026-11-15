@@ -8,10 +8,23 @@ use Illuminate\Support\Facades\DB;
 class HomepageSectionSeeder extends Seeder
 {
     public const SECTIONS = [
-        'hero', 'introduction', 'featured_products', 'product_categories', 'automotive_solutions',
-        'industrial_solutions', 'benefits', 'why_choose', 'industries', 'resources',
-        'dealer_recruitment', 'statistics', 'latest_articles', 'faqs', 'inquiry_cta',
-        'newsletter', 'social_links',
+        'hero',
+        'introduction',
+        'featured_products',
+        'product_categories',
+        'automotive_solutions',
+        'industrial_solutions',
+        'benefits',
+        'why_choose',
+        'industries',
+        'resources',
+        'dealer_recruitment',
+        'statistics',
+        'latest_articles',
+        'faqs',
+        'inquiry_cta',
+        'newsletter',
+        'social_links',
     ];
 
     public function run(): void

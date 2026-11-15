@@ -12,8 +12,15 @@ class ProductCategorySeeder extends Seeder
     public function run(): void
     {
         $names = [
-            'Diesel Engine Oils', 'Petrol Engine Oils', 'Motorcycle Engine Oils', 'Gear Oils',
-            'Transmission Fluids', 'Hydraulic Oils', 'Industrial Lubricants', 'Greases', 'Automotive Fluids',
+            'Diesel Engine Oils',
+            'Petrol Engine Oils',
+            'Motorcycle Engine Oils',
+            'Gear Oils',
+            'Transmission Fluids',
+            'Hydraulic Oils',
+            'Industrial Lubricants',
+            'Greases',
+            'Automotive Fluids',
         ];
 
         foreach ($names as $i => $name) {
