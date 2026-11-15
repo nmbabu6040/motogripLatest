@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Admin\Erp;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\StockItem;
 use App\Models\StockMovement;
 use App\Services\Erp\ErpService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class StockController extends Controller
 {
@@ -64,5 +67,67 @@ class StockController extends Controller
         activity('admin')->causedBy($request->user())->performedOn($stockItem)->withProperties($d)->log('stock.adjusted');
 
         return back()->with('status', 'Stock adjusted.');
+    }
+
+    public function create()
+    {
+        return view('admin.erp.stock.form', ['item' => new StockItem(['pack' => '', 'sale_price' => 0, 'cost_price' => 0, 'reorder_level' => 0]), 'products' => Product::orderBy('sku')->get(['id', 'sku', 'name'])]);
+    }
+
+    public function store(Request $request)
+    {
+        $d = $request->validate(['product_id' => ['required', Rule::exists('products', 'id')]] + $this->detailRules($request));
+        $d['pack'] = trim((string) ($d['pack'] ?? ''));
+        if (StockItem::where('product_id', $d['product_id'])->where('pack', $d['pack'])->exists()) {
+            return back()->withInput()->withErrors(['pack' => 'This product already has a stock item with that pack size.']);
+        }
+        $item = StockItem::create($d);
+        activity('admin')->causedBy($request->user())->performedOn($item)->log('stock_item.created');
+
+        return redirect()->route('admin.stock.show', $item)->with('status', 'Stock item added. Use "Adjust stock" to enter the opening quantity.');
+    }
+
+    public function edit(StockItem $stockItem)
+    {
+        return view('admin.erp.stock.form', ['item' => $stockItem->load('product'), 'products' => collect(), 'used' => $this->isUsed($stockItem)]);
+    }
+
+    public function save(Request $request, StockItem $stockItem)
+    {
+        $d = $request->validate($this->detailRules($request));
+        $d['pack'] = trim((string) ($d['pack'] ?? ''));
+        if ($d['pack'] !== $stockItem->pack && StockItem::where('product_id', $stockItem->product_id)->where('pack', $d['pack'])->where('id', '!=', $stockItem->id)->exists()) {
+            return back()->withInput()->withErrors(['pack' => 'This product already has a stock item with that pack size.']);
+        }
+        $stockItem->update($d);
+        activity('admin')->causedBy($request->user())->performedOn($stockItem)->log('stock_item.updated');
+
+        return redirect()->route('admin.stock.show', $stockItem)->with('status', 'Stock item saved.');
+    }
+
+    public function destroy(Request $request, StockItem $stockItem)
+    {
+        if ($this->isUsed($stockItem)) {
+            return back()->withErrors(['delete' => 'This stock item already has stock movements or appears on documents, so it cannot be deleted. Set its stock to zero and stop using it instead.']);
+        }
+        activity('admin')->causedBy($request->user())->withProperties(['label' => $stockItem->label()])->log('stock_item.deleted');
+        $stockItem->delete();
+
+        return redirect()->route('admin.stock.index')->with('status', 'Stock item deleted.');
+    }
+
+    private function detailRules(Request $request): array
+    {
+        return [
+            'pack' => ['nullable', 'string', 'max:60'], 'sale_price' => ['required', 'numeric', 'min:0', 'max:99999999'],
+            'cost_price' => ['required', 'numeric', 'min:0', 'max:99999999'], 'reorder_level' => ['required', 'integer', 'min:0', 'max:1000000'],
+        ];
+    }
+
+    private function isUsed(StockItem $item): bool
+    {
+        return $item->movements()->exists()
+            || DB::table('sale_items')->where('stock_item_id', $item->id)->exists()
+            || DB::table('purchase_items')->where('stock_item_id', $item->id)->exists();
     }
 }

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Sale extends Model
 {
-    protected $fillable = ['customer_id', 'customer_name', 'sold_on', 'status', 'subtotal', 'discount', 'tax_percent', 'tax_amount', 'total', 'notes', 'created_by'];
+    protected $fillable = ['customer_id', 'customer_name', 'sold_on', 'status', 'subtotal', 'discount', 'tax_percent', 'tax_amount', 'total', 'notes', 'created_by', 'pay_token'];
     protected $casts = ['sold_on' => 'date', 'subtotal' => 'decimal:2', 'discount' => 'decimal:2', 'tax_percent' => 'decimal:2', 'tax_amount' => 'decimal:2', 'total' => 'decimal:2'];
 
     public function customer(): BelongsTo { return $this->belongsTo(Party::class, 'customer_id')->withTrashed(); }
@@ -19,6 +19,7 @@ class Sale extends Model
     public function payments(): MorphMany { return $this->morphMany(Payment::class, 'payable'); }
     public function creator(): BelongsTo { return $this->belongsTo(User::class, 'created_by'); }
 
+    public function onlinePayments(): HasMany { return $this->hasMany(OnlinePayment::class); }
     public function number(): string { return 'INV-'.str_pad((string) $this->id, 6, '0', STR_PAD_LEFT); }
     public function isVoid(): bool { return $this->status === 'void'; }
     public function customerLabel(): string { return $this->customer?->name ?? ($this->customer_name ?: 'Walk-in customer'); }

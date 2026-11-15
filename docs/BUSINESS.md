@@ -34,3 +34,32 @@ Everything is under **Admin → Stock and accounts**.
 
 ## Recommended products (Amazon, AliExpress)
 Admin → **Recommended links**. Links are shown exactly as the store gave them; visitors go straight to the store, and the site only counts clicks per day. Amazon requires its own disclosure wording (Settings → Recommended products) and does not allow showing prices without its own tools, so no prices are shown.
+
+
+## Editing and deleting
+| Document | Edit | Delete |
+|---|---|---|
+| Invoice / purchase | Date, customer or supplier and notes any time. Items until a return or challan (invoice) or a return to the supplier (purchase) exists. Stock is corrected automatically and every change stays in the stock history. | **Void** (needs no payment, return or challan). A payment entered by mistake can be removed first. |
+| Sale return / purchase return | Date and reason | Delete: stock is corrected again. A sale return cannot be deleted if the goods have already been sold again. |
+| Challan | All fields | Delete: its items become "not yet delivered" again |
+| Stock item | Pack size, prices, reorder level | Only while it has no stock history and is on no document |
+| Newsletter subscriber | Confirm (only with their consent), resend the confirmation e-mail, unsubscribe | Delete permanently |
+
+## Online payment of invoices (SSLCommerz)
+Customers can pay an invoice on SSLCommerz's own page (cards, bKash, Nagad and more). Card and wallet details are entered there and never reach this site.
+
+Switch it on:
+1. Open an SSLCommerz merchant account and ask for your **Store ID** and **Store Password**. Start in their sandbox.
+2. Put these lines in `.env`:
+   ```
+   MOTOGRIP_ONLINE_PAYMENTS=true
+   SSLCOMMERZ_STORE_ID=your_store_id
+   SSLCOMMERZ_STORE_PASSWORD=your_store_password
+   SSLCOMMERZ_SANDBOX=true
+   ```
+3. Run `php artisan config:clear`.
+4. Open an invoice → **Create online payment link** → send the link to the customer.
+5. The gateway must be able to reach your site. On your own computer (`127.0.0.1`) the customer's browser comes back fine, but the gateway's server-to-server notice (IPN) cannot reach you; use a public address or a tunnel while testing.
+6. When the sandbox works, set `SSLCOMMERZ_SANDBOX=false` with your live credentials.
+
+How it stays safe: a payment is recorded only after SSLCommerz's validation service confirms the same transaction and amount; the browser's word is never enough. The same reply twice records once. Payments flagged risky, or arriving after the invoice balance changed, are held under **Online payment → Review** on the invoice for a person to decide.

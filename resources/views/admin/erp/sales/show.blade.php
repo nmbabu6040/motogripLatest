@@ -3,6 +3,7 @@
     <div class="no-print mb-4 flex flex-wrap gap-3">
         <button type="button" onclick="window.print()" class="rounded-control bg-navy px-5 py-2.5 font-semibold text-white hover:bg-industrial">Print invoice</button>
         @unless ($sale->isVoid())
+            <a class="rounded-control border border-navy px-4 py-2.5 font-semibold text-navy hover:bg-white" href="{{ route('admin.sales.edit', $sale) }}">Edit</a>
             <a class="rounded-control border border-navy px-4 py-2.5 font-semibold text-navy hover:bg-white" href="{{ route('admin.sales.challans.create', $sale) }}">Create challan</a>
             <a class="rounded-control border border-navy px-4 py-2.5 font-semibold text-navy hover:bg-white" href="{{ route('admin.sales.returns.create', $sale) }}">Return items</a>
             <form method="POST" action="{{ route('admin.sales.void', $sale) }}" x-on:submit="if (!confirm('Void this invoice and put the stock back?')) $event.preventDefault()">@csrf<button class="rounded-control border border-red-300 px-4 py-2.5 font-semibold text-red-800 hover:bg-red-50">Void</button></form>
@@ -41,10 +42,25 @@
         @if (! $sale->isVoid() && $due > 0)
             @include('admin.erp._payment_form', ['action' => route('admin.sales.pay', $sale), 'title' => 'Receive a payment', 'due' => $due])
         @endif
+        @if (! $sale->isVoid())
+            <section class="rounded-panel border border-steel bg-white p-5 text-sm"><h3 class="mb-2 font-extrabold">Online payment</h3>
+                @if (! $onlineEnabled)
+                    <p>অনলাইন পেমেন্ট এখন বন্ধ। চালু করার নিয়ম <code>docs/BUSINESS.md</code> ফাইলে আছে (SSLCommerz-এর স্টোর আইডি ও পাসওয়ার্ড লাগবে)।</p>
+                @elseif ($sale->pay_token)
+                    <label class="mb-1 block font-semibold" for="paylink">Link to send to the customer</label>
+                    <input id="paylink" readonly onclick="this.select()" value="{{ route('pay.show', $sale->pay_token) }}" class="w-full rounded-control border border-steel bg-surface px-3 py-2">
+                @elseif ($due > 0)
+                    <form method="POST" action="{{ route('admin.sales.paylink', $sale) }}">@csrf<button class="rounded-control border border-navy px-4 py-2 font-semibold text-navy hover:bg-surface">Create online payment link</button></form>
+                @endif
+                @if ($sale->onlinePayments->isNotEmpty())
+                    <ul class="mt-3 space-y-1">@foreach ($sale->onlinePayments as $o)<li>{{ $o->created_at->format('d M Y H:i') }} · {{ Money::format($o->amount) }} · <span class="rounded-full px-2 py-0.5 text-xs font-bold {{ $o->status === 'paid' ? 'bg-green-100 text-green-900' : ($o->status === 'review' ? 'bg-amber/30' : 'bg-surface') }}">{{ ucfirst($o->status) }}</span> <span class="text-xs">{{ $o->tran_id }}</span>@if ($o->note)<br><span class="text-xs text-red-800">{{ $o->note }}</span>@endif</li>@endforeach</ul>
+                @endif
+            </section>
+        @endif
         @if ($sale->payments->isNotEmpty() || $sale->returns->isNotEmpty() || $sale->challans->isNotEmpty())
             <section class="rounded-panel border border-steel bg-white p-5 text-sm"><h3 class="mb-2 font-extrabold">History</h3>
                 <ul class="space-y-1">
-                    @foreach ($sale->payments as $p)<li>Payment {{ Money::format($p->amount) }} · {{ \App\Models\Payment::METHODS[$p->method] ?? $p->method }} · {{ $p->paid_on->format('d M Y') }}@if ($p->reference) · {{ $p->reference }}@endif</li>@endforeach
+                    @foreach ($sale->payments as $p)<li class="flex flex-wrap items-center gap-3"><span>Payment {{ Money::format($p->amount) }} · {{ \App\Models\Payment::METHODS[$p->method] ?? $p->method }} · {{ $p->paid_on->format('d M Y') }}@if ($p->reference) · {{ $p->reference }}@endif</span><form method="POST" action="{{ route('admin.payments.destroy', $p) }}" x-on:submit="if (!confirm('Remove this payment?')) $event.preventDefault()">@csrf @method('DELETE')<button class="text-red-800 underline">Remove</button></form></li>@endforeach
                     @foreach ($sale->returns as $r)<li>Return <a class="underline text-industrial" href="{{ route('admin.sale-returns.show', $r) }}">{{ $r->number() }}</a> · {{ Money::format($r->refund_total) }} · {{ $r->returned_on->format('d M Y') }}</li>@endforeach
                     @foreach ($sale->challans as $c)<li>Challan <a class="underline text-industrial" href="{{ route('admin.challans.show', $c) }}">{{ $c->number() }}</a> · {{ $c->delivered_on->format('d M Y') }}</li>@endforeach
                 </ul></section>

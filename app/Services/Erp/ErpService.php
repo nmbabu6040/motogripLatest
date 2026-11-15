@@ -344,7 +344,7 @@ class ErpService
         });
     }
 
-    public function addPayment(Model $payable, float $amount, string $method, string $date, ?string $reference, ?string $note, User $user): Payment
+    public function addPayment(Model $payable, float $amount, string $method, string $date, ?string $reference, ?string $note, ?User $user): Payment
     {
         if ($amount <= 0) {
             $this->fail('amount', 'Enter an amount greater than zero.');
@@ -357,6 +357,173 @@ class ErpService
             $this->fail('amount', 'The amount is more than the balance due ('.number_format($due, 2).').');
         }
 
-        return $payable->payments()->create(['amount' => round($amount, 2), 'method' => $method, 'paid_on' => $date, 'reference' => $reference, 'note' => $note, 'created_by' => $user->id]);
+        return $payable->payments()->create(['amount' => round($amount, 2), 'method' => $method, 'paid_on' => $date, 'reference' => $reference, 'note' => $note, 'created_by' => $user?->id]);
+    }
+
+    // ------------------------------------------------------------------ editing and deleting
+
+    /**
+     * Header fields (date, customer, notes) can always be changed. The items can be changed only while no return or challan exists.
+     * Changing items puts the old quantities back and takes the new ones out, in one step, and every move stays in the stock history.
+     *
+     * @param array{customer_id?:?int, customer_name?:?string, sold_on:string, notes?:?string, items?:array, discount?:float, tax_percent?:float} $d
+     */
+    public function updateSale(Sale $sale, array $d, User $user): Sale
+    {
+        return DB::transaction(function () use ($sale, $d, $user) {
+            $s = Sale::lockForUpdate()->with('items')->findOrFail($sale->id);
+            if ($s->isVoid()) {
+                $this->fail('items', 'A voided invoice cannot be edited.');
+            }
+            $s->fill(['customer_id' => $d['customer_id'] ?? null, 'customer_name' => $d['customer_name'] ?? null, 'sold_on' => $d['sold_on'], 'notes' => $d['notes'] ?? null]);
+
+            if (isset($d['items'])) {
+                if ($s->returns()->exists() || $s->challans()->exists()) {
+                    $this->fail('items', 'Items cannot be changed after a return or challan exists. Only the date, customer and notes can be edited.');
+                }
+                $new = collect($d['items']);
+                $locked = $this->lock($s->items->pluck('stock_item_id')->merge($new->pluck('stock_item_id'))->unique()->all());
+                $oldQty = $s->items->groupBy('stock_item_id')->map(fn ($g) => (int) $g->sum('quantity'));
+
+                foreach ($new->groupBy('stock_item_id') as $id => $group) {
+                    $need = (int) $group->sum('quantity');
+                    $available = $this->balance($id) + (int) ($oldQty[$id] ?? 0);
+                    if ($need > $available) {
+                        $this->fail('items', "Not enough stock for {$locked[$id]->label()}: {$available} available, {$need} requested.");
+                    }
+                }
+
+                $oldCost = $s->items->keyBy('stock_item_id')->map(fn ($l) => $l->unit_cost);
+                foreach ($s->items as $line) {
+                    $this->move($locked[$line->stock_item_id], $line->quantity, 'adjustment', $s, today()->toDateString(), 'Invoice edited: old lines put back', $user->id);
+                }
+                $s->items()->delete();
+
+                $t = $this->totals($new->sum(fn ($l) => $l['quantity'] * $l['unit_price']), (float) ($d['discount'] ?? 0), (float) ($d['tax_percent'] ?? 0));
+                if ($t['total'] + 0.005 < $s->paidAmount()) {
+                    $this->fail('items', 'The new total is less than what has already been received. Delete or reduce the payment first.');
+                }
+                foreach ($new as $l) {
+                    $item = $locked[$l['stock_item_id']];
+                    $qty = (int) $l['quantity'];
+                    SaleItem::create(['sale_id' => $s->id, 'stock_item_id' => $item->id, 'quantity' => $qty, 'unit_price' => $l['unit_price'], 'unit_cost' => $oldCost[$item->id] ?? $item->cost_price, 'line_total' => round($qty * $l['unit_price'], 2)]);
+                    $this->move($item, -$qty, 'sale', $s, $d['sold_on'], 'Invoice edited: new lines', $user->id);
+                }
+                $s->fill(['subtotal' => $t['subtotal'], 'discount' => $t['discount'], 'tax_percent' => min(max((float) ($d['tax_percent'] ?? 0), 0), 100), 'tax_amount' => $t['tax'], 'total' => $t['total']]);
+            }
+
+            $s->save();
+
+            return $s;
+        });
+    }
+
+    /** Same idea for purchases. The average cost of the affected items is worked out again from all purchases. */
+    public function updatePurchase(Purchase $purchase, array $d, User $user): Purchase
+    {
+        return DB::transaction(function () use ($purchase, $d, $user) {
+            $p = Purchase::lockForUpdate()->with('items')->findOrFail($purchase->id);
+            if ($p->isVoid()) {
+                $this->fail('items', 'A voided purchase cannot be edited.');
+            }
+            $p->fill(['supplier_id' => $d['supplier_id'], 'purchased_on' => $d['purchased_on'], 'notes' => $d['notes'] ?? null]);
+
+            if (isset($d['items'])) {
+                if ($p->returns()->exists()) {
+                    $this->fail('items', 'Items cannot be changed after a return to the supplier exists. Only the date, supplier and notes can be edited.');
+                }
+                $new = collect($d['items']);
+                $locked = $this->lock($p->items->pluck('stock_item_id')->merge($new->pluck('stock_item_id'))->unique()->all());
+                $oldQty = $p->items->groupBy('stock_item_id')->map(fn ($g) => (int) $g->sum('quantity'));
+                $newQty = $new->groupBy('stock_item_id')->map(fn ($g) => (int) $g->sum('quantity'));
+
+                foreach ($locked as $id => $item) {
+                    if ($this->balance($id) - (int) ($oldQty[$id] ?? 0) + (int) ($newQty[$id] ?? 0) < 0) {
+                        $this->fail('items', "Some of {$item->label()} has already been sold, so the quantity cannot go down that far.");
+                    }
+                }
+
+                foreach ($p->items as $line) {
+                    $this->move($locked[$line->stock_item_id], -$line->quantity, 'adjustment', $p, today()->toDateString(), 'Purchase edited: old lines taken out', $user->id);
+                }
+                $p->items()->delete();
+
+                $t = $this->totals($new->sum(fn ($l) => $l['quantity'] * $l['unit_cost']), (float) ($d['discount'] ?? 0), 0);
+                if ($t['total'] + 0.005 < $p->paidAmount()) {
+                    $this->fail('items', 'The new total is less than what has already been paid. Delete or reduce the payment first.');
+                }
+                foreach ($new as $l) {
+                    $qty = (int) $l['quantity'];
+                    PurchaseItem::create(['purchase_id' => $p->id, 'stock_item_id' => $l['stock_item_id'], 'quantity' => $qty, 'unit_cost' => $l['unit_cost'], 'line_total' => round($qty * $l['unit_cost'], 2)]);
+                    $this->move($locked[$l['stock_item_id']], $qty, 'purchase', $p, $d['purchased_on'], 'Purchase edited: new lines', $user->id);
+                }
+                $p->fill(['subtotal' => $t['subtotal'], 'discount' => $t['discount'], 'total' => $t['total']]);
+                $p->save();
+
+                foreach ($locked as $id => $item) {
+                    $this->recomputeCost($item);
+                }
+            }
+
+            $p->save();
+
+            return $p;
+        });
+    }
+
+    /** Average cost = value of all received purchase lines divided by their quantity. Kept as it is when there are none. */
+    private function recomputeCost(StockItem $item): void
+    {
+        $row = DB::table('purchase_items')->join('purchases', 'purchases.id', '=', 'purchase_items.purchase_id')
+            ->where('purchases.status', 'received')->where('purchase_items.stock_item_id', $item->id)
+            ->selectRaw('COALESCE(SUM(purchase_items.line_total), 0) as v, COALESCE(SUM(purchase_items.quantity), 0) as q')->first();
+        if ((int) $row->q > 0) {
+            $item->update(['cost_price' => round((float) $row->v / (int) $row->q, 2)]);
+        }
+    }
+
+    public function deletePayment(Payment $payment): void
+    {
+        $payable = $payment->payable;
+        if ($payable?->isVoid()) {
+            $this->fail('payment', 'This document is voided.');
+        }
+        $payment->delete();
+    }
+
+    public function updateReturnHeader(Model $return, string $date, ?string $reason): void
+    {
+        $return->update(['returned_on' => $date, 'reason' => $reason]);
+    }
+
+    /** Deleting a sale return takes the goods out of stock again, so the stock must still be there. */
+    public function deleteSaleReturn(SaleReturn $return, User $user): void
+    {
+        DB::transaction(function () use ($return, $user) {
+            $r = SaleReturn::lockForUpdate()->with('items')->findOrFail($return->id);
+            $locked = $this->lock($r->items->pluck('stock_item_id')->unique()->all());
+            foreach ($r->items->groupBy('stock_item_id') as $id => $group) {
+                if ($this->balance($id) < $group->sum('quantity')) {
+                    $this->fail('delete', "Not enough {$locked[$id]->label()} in stock to take this return back out. Some of it has already been sold again.");
+                }
+            }
+            foreach ($r->items as $line) {
+                $this->move($locked[$line->stock_item_id], -$line->quantity, 'adjustment', $r, today()->toDateString(), 'Sale return deleted', $user->id);
+            }
+            $r->delete();
+        });
+    }
+
+    /** Deleting a purchase return puts the goods back into stock. */
+    public function deletePurchaseReturn(PurchaseReturn $return, User $user): void
+    {
+        DB::transaction(function () use ($return, $user) {
+            $r = PurchaseReturn::lockForUpdate()->with('items')->findOrFail($return->id);
+            $locked = $this->lock($r->items->pluck('stock_item_id')->unique()->all());
+            foreach ($r->items as $line) {
+                $this->move($locked[$line->stock_item_id], $line->quantity, 'adjustment', $r, today()->toDateString(), 'Purchase return deleted', $user->id);
+            }
+            $r->delete();
+        });
     }
 }

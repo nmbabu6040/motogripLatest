@@ -3,6 +3,7 @@
     <div class="no-print mb-4 flex flex-wrap gap-3">
         <button type="button" onclick="window.print()" class="rounded-control bg-navy px-5 py-2.5 font-semibold text-white hover:bg-industrial">Print</button>
         @unless ($purchase->isVoid())
+            <a class="rounded-control border border-navy px-4 py-2.5 font-semibold text-navy hover:bg-white" href="{{ route('admin.purchases.edit', $purchase) }}">Edit</a>
             <a class="rounded-control border border-navy px-4 py-2.5 font-semibold text-navy hover:bg-white" href="{{ route('admin.purchases.returns.create', $purchase) }}">Return items to supplier</a>
             <form method="POST" action="{{ route('admin.purchases.void', $purchase) }}" x-on:submit="if (!confirm('Void this purchase and take the stock out again?')) $event.preventDefault()">@csrf<button class="rounded-control border border-red-300 px-4 py-2.5 font-semibold text-red-800 hover:bg-red-50">Void</button></form>
         @endunless
@@ -39,7 +40,7 @@
         @if ($purchase->payments->isNotEmpty() || $purchase->returns->isNotEmpty())
             <section class="rounded-panel border border-steel bg-white p-5 text-sm"><h3 class="mb-2 font-extrabold">History</h3>
                 <ul class="space-y-1">
-                    @foreach ($purchase->payments as $p)<li>Payment {{ Money::format($p->amount) }} · {{ \App\Models\Payment::METHODS[$p->method] ?? $p->method }} · {{ $p->paid_on->format('d M Y') }}@if ($p->reference) · {{ $p->reference }}@endif</li>@endforeach
+                    @foreach ($purchase->payments as $p)<li class="flex flex-wrap items-center gap-3"><span>Payment {{ Money::format($p->amount) }} · {{ \App\Models\Payment::METHODS[$p->method] ?? $p->method }} · {{ $p->paid_on->format('d M Y') }}@if ($p->reference) · {{ $p->reference }}@endif</span><form method="POST" action="{{ route('admin.payments.destroy', $p) }}" x-on:submit="if (!confirm('Remove this payment?')) $event.preventDefault()">@csrf @method('DELETE')<button class="text-red-800 underline">Remove</button></form></li>@endforeach
                     @foreach ($purchase->returns as $r)<li>Return <a class="underline text-industrial" href="{{ route('admin.purchase-returns.show', $r) }}">{{ $r->number() }}</a> · {{ Money::format($r->credit_total) }} · {{ $r->returned_on->format('d M Y') }}</li>@endforeach
                 </ul></section>
         @endif

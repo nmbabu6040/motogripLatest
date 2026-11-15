@@ -14,7 +14,8 @@
             <x-button>Filter</x-button>
         </form>
         @can('inventory.manage')
-            <form method="POST" action="{{ route('admin.stock.sync') }}">@csrf<button class="rounded-control border border-navy px-4 py-2 font-semibold text-navy hover:bg-white">Add products to stock list</button></form>
+            <div class="flex gap-2"><a href="{{ route('admin.stock.create') }}" class="rounded-control bg-navy px-4 py-2 font-semibold text-white hover:bg-industrial">New stock item</a>
+            <form method="POST" action="{{ route('admin.stock.sync') }}">@csrf<button class="rounded-control border border-navy px-4 py-2 font-semibold text-navy hover:bg-white">Add products to stock list</button></form></div>
         @endcan
     </div>
 
@@ -33,7 +34,7 @@
                     <td class="p-3">{{ $i->reorder_level }}</td><td class="p-3">{{ Money::format($i->sale_price) }}</td>
                 @endcan
                 <td class="p-3">{{ Money::format($i->cost_price) }}</td>
-                <td class="p-3">@can('inventory.manage')<form id="f{{ $i->id }}" method="POST" action="{{ route('admin.stock.update', $i) }}">@csrf @method('PUT')<button class="underline text-industrial">Save</button></form>@endcan</td>
+                <td class="flex gap-3 p-3">@can('inventory.manage')<form id="f{{ $i->id }}" method="POST" action="{{ route('admin.stock.update', $i) }}">@csrf @method('PUT')<button class="underline text-industrial">Save</button></form><a class="underline text-industrial" href="{{ route('admin.stock.edit', $i) }}">Edit<span class="sr-only"> {{ $i->product?->name }}</span></a>@endcan</td>
             </tr>
         @empty
             <tr><td colspan="6" class="p-8 text-center">কোনো স্টক আইটেম নেই। উপরের "Add products to stock list" চাপলে আপনার সব পণ্য ও তাদের প্যাক সাইজ এখানে আসবে।</td></tr>

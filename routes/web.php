@@ -21,6 +21,11 @@ Route::get('sitemap.xml', [SeoFilesController::class, 'sitemap']);
 Route::middleware(['web', SecurityHeaders::class])->group(function () {
     Route::get('documents/{document}', DocumentDownloadController::class)->middleware('throttle:60,1')->name('documents.download');
 
+    // Pay an invoice online. The token in the address is the secret; the gateway's replies are always checked with the gateway.
+    Route::get('pay/{token}', [\App\Http\Controllers\PayController::class, 'show'])->where('token', '[A-Za-z0-9]{40}')->name('pay.show');
+    Route::post('pay/{token}/start', [\App\Http\Controllers\PayController::class, 'start'])->where('token', '[A-Za-z0-9]{40}')->middleware('throttle:6,1')->name('pay.start');
+    Route::match(['get', 'post'], 'pay-callback/{outcome}', [\App\Http\Controllers\PayController::class, 'callback'])->where('outcome', 'success|fail|cancel')->name('pay.callback');
+    Route::post('pay-ipn', [\App\Http\Controllers\PayController::class, 'ipn'])->name('pay.ipn');
     Route::post('recommended/{partnerLink}/click', [\App\Http\Controllers\PartnerController::class, 'click'])->middleware('throttle:30,1')->name('partners.click');
     Route::post('newsletter', [NewsletterController::class, 'subscribe'])->middleware('throttle:5,10')->name('newsletter.subscribe');
     Route::get('newsletter/confirm/{subscriber}', [NewsletterController::class, 'confirm'])->middleware('signed')->name('newsletter.confirm');

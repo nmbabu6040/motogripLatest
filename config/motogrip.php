@@ -9,6 +9,16 @@ return [
     // Data retention (months). Applied by `php artisan motogrip:purge-old-data`.
     'retention' => ['inquiries' => 24, 'spam' => 3, 'dealer_rejected' => 24, 'unsubscribed' => 12, 'ip_hash_days' => 90],
 
+    // Online payment of invoices through SSLCommerz. Off until the store id and password are in .env.
+    'payments' => [
+        'enabled' => (bool) env('MOTOGRIP_ONLINE_PAYMENTS', false),
+        'sslcommerz' => [
+            'store_id' => env('SSLCOMMERZ_STORE_ID'),
+            'store_password' => env('SSLCOMMERZ_STORE_PASSWORD'),
+            'sandbox' => (bool) env('SSLCOMMERZ_SANDBOX', true),
+        ],
+    ],
+
     'backups' => [
         'disk' => env('BACKUP_DISK', 'backups'),
         'archive_password' => env('BACKUP_ARCHIVE_PASSWORD'),

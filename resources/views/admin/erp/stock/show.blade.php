@@ -24,5 +24,5 @@
             <td class="p-3 text-right font-bold {{ $m->quantity < 0 ? 'text-red-700' : 'text-green-700' }}">{{ $m->quantity > 0 ? '+' : '' }}{{ $m->quantity }}</td><td class="p-3">{{ $m->note }}</td><td class="p-3">{{ $m->user?->name }}</td></tr>
         @empty<tr><td colspan="5" class="p-6 text-center">No movements yet.</td></tr>@endforelse</tbody></table></div>
     <div class="mt-4">{{ $movements->links() }}</div>
-    <p class="mt-4"><a class="underline text-industrial" href="{{ route('admin.stock.index') }}">← Back to stock</a></p>
+    <p class="mt-4 flex gap-4"><a class="underline text-industrial" href="{{ route('admin.stock.index') }}">← Back to stock</a>@can('inventory.manage')<a class="underline text-industrial" href="{{ route('admin.stock.edit', $item) }}">Edit or delete this item</a>@endcan</p>
 </x-layouts.admin-shell>

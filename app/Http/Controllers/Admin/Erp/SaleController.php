@@ -62,7 +62,10 @@ class SaleController extends Controller
 
     public function show(Sale $sale)
     {
-        return view('admin.erp.sales.show', ['sale' => $sale->load(['customer', 'items.stockItem.product', 'payments', 'returns', 'challans', 'creator'])]);
+        return view('admin.erp.sales.show', [
+            'sale' => $sale->load(['customer', 'items.stockItem.product', 'payments', 'returns', 'challans', 'creator', 'onlinePayments']),
+            'onlineEnabled' => app(\App\Services\Payments\SslCommerz::class)->enabled(),
+        ]);
     }
 
     public function pay(Request $request, Sale $sale, ErpService $erp)
@@ -80,5 +83,57 @@ class SaleController extends Controller
         activity('admin')->causedBy($request->user())->performedOn($sale)->log('sale.voided');
 
         return back()->with('status', 'Invoice voided and stock put back.');
+    }
+
+    public function edit(Sale $sale)
+    {
+        abort_if($sale->isVoid(), 404);
+        $sale->load('items');
+        $locked = $sale->returns()->exists() || $sale->challans()->exists();
+        $old = $sale->items->groupBy('stock_item_id')->map(fn ($g) => (int) $g->sum('quantity'));
+
+        return view('admin.erp.sales.edit', [
+            'sale' => $sale, 'locked' => $locked, 'customers' => Party::kind('customer')->orderBy('name')->get(),
+            // the stock figure shown beside each item includes what this invoice is already holding
+            'stockItems' => collect(StockItem::picklist())->map(fn ($i) => array_merge($i, ['stock' => $i['stock'] + (int) ($old[$i['id']] ?? 0)]))->all(),
+            'rows' => $sale->items->map(fn ($l) => ['stock_item_id' => $l->stock_item_id, 'quantity' => $l->quantity, 'price' => (float) $l->unit_price])->values()->all(),
+        ]);
+    }
+
+    public function update(Request $request, Sale $sale, ErpService $erp)
+    {
+        $locked = $sale->returns()->exists() || $sale->challans()->exists();
+        $rules = [
+            'customer_id' => ['nullable', Rule::exists('parties', 'id')->where('kind', 'customer')->whereNull('deleted_at')],
+            'customer_name' => ['nullable', 'string', 'max:160'], 'sold_on' => ['required', 'date'], 'notes' => ['nullable', 'string', 'max:1000'],
+        ];
+        if (! $locked) {
+            $rules += [
+                'discount' => ['nullable', 'numeric', 'min:0'], 'tax_percent' => ['nullable', 'numeric', 'between:0,100'],
+                'items' => ['required', 'array', 'min:1', 'max:60'], 'items.*.stock_item_id' => ['required', Rule::exists('stock_items', 'id')],
+                'items.*.quantity' => ['required', 'integer', 'min:1', 'max:1000000'], 'items.*.unit_price' => ['required', 'numeric', 'min:0', 'max:99999999'],
+            ];
+        }
+        $d = $request->validate($rules);
+        $d['sold_on'] = Carbon::parse($d['sold_on'])->toDateString();
+
+        $erp->updateSale($sale, $d, $request->user());
+        activity('admin')->causedBy($request->user())->performedOn($sale)->log('sale.updated');
+
+        return redirect()->route('admin.sales.show', $sale)->with('status', 'Invoice '.$sale->number().' updated.');
+    }
+
+    /** Creates (once) the secret link the customer uses to pay this invoice online. */
+    public function payLink(Request $request, Sale $sale)
+    {
+        abort_unless(app(\App\Services\Payments\SslCommerz::class)->enabled(), 404);
+        abort_if($sale->isVoid(), 404);
+
+        if (! $sale->pay_token) {
+            $sale->update(['pay_token' => \Illuminate\Support\Str::random(40)]);
+            activity('admin')->causedBy($request->user())->performedOn($sale)->log('sale.pay_link_created');
+        }
+
+        return back()->with('status', 'Payment link is ready. Copy it below and send it to the customer.');
     }
 }

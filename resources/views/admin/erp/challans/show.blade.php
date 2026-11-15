@@ -1,6 +1,7 @@
 <x-layouts.admin-shell title="Challan {{ $challan->number() }}">
     <div class="no-print mb-4 flex gap-3"><button type="button" onclick="window.print()" class="rounded-control bg-navy px-5 py-2.5 font-semibold text-white hover:bg-industrial">Print challan</button>
-        <a class="self-center underline text-industrial" href="{{ route('admin.sales.show', $challan->sale) }}">← {{ $challan->sale->number() }}</a></div>
+        <a class="self-center underline text-industrial" href="{{ route('admin.sales.show', $challan->sale) }}">← {{ $challan->sale->number() }}</a>
+        <a class="self-center underline text-industrial" href="{{ route('admin.challans.edit', $challan) }}">Edit or delete</a></div>
     <article class="max-w-4xl rounded-panel border border-steel bg-white p-8 print:border-0 print:p-0">
         <div class="flex flex-wrap items-start justify-between gap-6">
             @include('admin.erp._company')

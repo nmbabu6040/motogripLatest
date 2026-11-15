@@ -82,4 +82,48 @@ class ReturnController extends Controller
     {
         return $request->validate(['returned_on' => ['required', 'date'], 'reason' => ['nullable', 'string', 'max:255'], 'qty' => ['required', 'array'], 'qty.*' => ['nullable', 'integer', 'min:0', 'max:1000000']]);
     }
+
+    public function saleEdit(SaleReturn $saleReturn)
+    {
+        return view('admin.erp.returns.edit', ['kind' => 'sale', 'return' => $saleReturn, 'action' => route('admin.sale-returns.update', $saleReturn), 'delete' => route('admin.sale-returns.destroy', $saleReturn)]);
+    }
+
+    public function saleUpdate(Request $request, SaleReturn $saleReturn, ErpService $erp)
+    {
+        $d = $request->validate(['returned_on' => ['required', 'date'], 'reason' => ['nullable', 'string', 'max:255']]);
+        $erp->updateReturnHeader($saleReturn, Carbon::parse($d['returned_on'])->toDateString(), $d['reason'] ?? null);
+        activity('admin')->causedBy($request->user())->performedOn($saleReturn)->log('sale_return.updated');
+
+        return redirect()->route('admin.sale-returns.show', $saleReturn)->with('status', 'Saved.');
+    }
+
+    public function saleDestroy(Request $request, SaleReturn $saleReturn, ErpService $erp)
+    {
+        $erp->deleteSaleReturn($saleReturn, $request->user());
+        activity('admin')->causedBy($request->user())->withProperties(['number' => $saleReturn->number()])->log('sale_return.deleted');
+
+        return redirect()->route('admin.sale-returns.index')->with('status', 'Return deleted and stock corrected.');
+    }
+
+    public function purchaseEdit(PurchaseReturn $purchaseReturn)
+    {
+        return view('admin.erp.returns.edit', ['kind' => 'purchase', 'return' => $purchaseReturn, 'action' => route('admin.purchase-returns.update', $purchaseReturn), 'delete' => route('admin.purchase-returns.destroy', $purchaseReturn)]);
+    }
+
+    public function purchaseUpdate(Request $request, PurchaseReturn $purchaseReturn, ErpService $erp)
+    {
+        $d = $request->validate(['returned_on' => ['required', 'date'], 'reason' => ['nullable', 'string', 'max:255']]);
+        $erp->updateReturnHeader($purchaseReturn, Carbon::parse($d['returned_on'])->toDateString(), $d['reason'] ?? null);
+        activity('admin')->causedBy($request->user())->performedOn($purchaseReturn)->log('purchase_return.updated');
+
+        return redirect()->route('admin.purchase-returns.show', $purchaseReturn)->with('status', 'Saved.');
+    }
+
+    public function purchaseDestroy(Request $request, PurchaseReturn $purchaseReturn, ErpService $erp)
+    {
+        $erp->deletePurchaseReturn($purchaseReturn, $request->user());
+        activity('admin')->causedBy($request->user())->withProperties(['number' => $purchaseReturn->number()])->log('purchase_return.deleted');
+
+        return redirect()->route('admin.purchase-returns.index')->with('status', 'Return deleted and stock corrected.');
+    }
 }

@@ -51,4 +51,31 @@ class ChallanController extends Controller
     {
         return view('admin.erp.challans.show', ['challan' => $challan->load(['sale.customer', 'items.saleItem.stockItem.product'])]);
     }
+
+    public function edit(Challan $challan)
+    {
+        return view('admin.erp.challans.edit', ['challan' => $challan->load('sale')]);
+    }
+
+    public function update(Request $request, Challan $challan)
+    {
+        $d = $request->validate([
+            'delivered_on' => ['required', 'date'], 'receiver_name' => ['nullable', 'string', 'max:160'], 'receiver_phone' => ['nullable', 'string', 'max:32'],
+            'delivery_address' => ['nullable', 'string', 'max:1000'], 'vehicle_no' => ['nullable', 'string', 'max:40'], 'driver_name' => ['nullable', 'string', 'max:120'], 'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+        $d['delivered_on'] = Carbon::parse($d['delivered_on'])->toDateString();
+        $challan->update($d);
+        activity('admin')->causedBy($request->user())->performedOn($challan)->log('challan.updated');
+
+        return redirect()->route('admin.challans.show', $challan)->with('status', 'Challan saved.');
+    }
+
+    public function destroy(Request $request, Challan $challan)
+    {
+        activity('admin')->causedBy($request->user())->withProperties(['number' => $challan->number()])->log('challan.deleted');
+        $sale = $challan->sale;
+        $challan->delete();   // a challan does not move stock, so nothing else changes
+
+        return redirect()->route('admin.sales.show', $sale)->with('status', 'Challan deleted. Those items can be put on a new challan.');
+    }
 }

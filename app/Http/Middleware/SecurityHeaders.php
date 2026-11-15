@@ -32,7 +32,7 @@ class SecurityHeaders
                 "font-src 'self' data:",
                 "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://pagead2.googlesyndication.com",
                 "frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com",
-                "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'self'",
+                "object-src 'none'", "base-uri 'self'", "form-action 'self' https://*.sslcommerz.com", "frame-ancestors 'self'",
             ]));
         }
 

@@ -10,6 +10,7 @@ pest()->beforeEach(function () {
     config([
         'motogrip.features.affiliate' => false,
         'motogrip.features.adsense' => false,
+        'motogrip.payments.enabled' => false,
         'motogrip.features.guest_comments' => true,
         'motogrip.features.dealer_locator' => true,
         'motogrip.csp_enabled' => true,

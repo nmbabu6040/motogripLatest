@@ -68,6 +68,10 @@ Route::middleware(['web', SecurityHeaders::class, 'auth', 'verified', EnsureAcco
         Route::middleware('can:newsletter.manage')->group(function () {
             Route::get('newsletter', [Admin\NewsletterAdminController::class, 'index'])->name('newsletter.index');
             Route::get('newsletter/export', [Admin\NewsletterAdminController::class, 'export'])->name('newsletter.export');
+            Route::post('newsletter/{subscriber}/confirm', [Admin\NewsletterAdminController::class, 'confirm'])->whereNumber('subscriber')->name('newsletter.confirm');
+            Route::post('newsletter/{subscriber}/resend', [Admin\NewsletterAdminController::class, 'resend'])->whereNumber('subscriber')->name('newsletter.resend');
+            Route::post('newsletter/{subscriber}/unsubscribe', [Admin\NewsletterAdminController::class, 'unsubscribe'])->whereNumber('subscriber')->name('newsletter.unsubscribe');
+            Route::delete('newsletter/{subscriber}', [Admin\NewsletterAdminController::class, 'destroy'])->whereNumber('subscriber')->name('newsletter.destroy');
         });
 
         // Content
@@ -105,7 +109,12 @@ Route::middleware(['web', SecurityHeaders::class, 'auth', 'verified', EnsureAcco
             Route::get('stock/{stockItem}', [Erp\StockController::class, 'show'])->whereNumber('stockItem')->name('stock.show');
         });
         Route::middleware('can:inventory.manage')->group(function () {
+            Route::get('stock/create', [Erp\StockController::class, 'create'])->name('stock.create');
+            Route::post('stock', [Erp\StockController::class, 'store'])->name('stock.store');
             Route::post('stock/sync', [Erp\StockController::class, 'sync'])->name('stock.sync');
+            Route::get('stock/{stockItem}/edit', [Erp\StockController::class, 'edit'])->whereNumber('stockItem')->name('stock.edit');
+            Route::put('stock/{stockItem}/details', [Erp\StockController::class, 'save'])->whereNumber('stockItem')->name('stock.save');
+            Route::delete('stock/{stockItem}', [Erp\StockController::class, 'destroy'])->whereNumber('stockItem')->name('stock.destroy');
             Route::put('stock/{stockItem}', [Erp\StockController::class, 'update'])->whereNumber('stockItem')->name('stock.update');
             Route::post('stock/{stockItem}/adjust', [Erp\StockController::class, 'adjust'])->whereNumber('stockItem')->name('stock.adjust');
         });
@@ -122,11 +131,16 @@ Route::middleware(['web', SecurityHeaders::class, 'auth', 'verified', EnsureAcco
             Route::post('purchases', [Erp\PurchaseController::class, 'store'])->name('purchases.store');
             Route::get('purchases/{purchase}', [Erp\PurchaseController::class, 'show'])->whereNumber('purchase')->name('purchases.show');
             Route::post('purchases/{purchase}/payments', [Erp\PurchaseController::class, 'pay'])->whereNumber('purchase')->name('purchases.pay');
+            Route::get('purchases/{purchase}/edit', [Erp\PurchaseController::class, 'edit'])->whereNumber('purchase')->name('purchases.edit');
+            Route::put('purchases/{purchase}', [Erp\PurchaseController::class, 'update'])->whereNumber('purchase')->name('purchases.update');
             Route::post('purchases/{purchase}/void', [Erp\PurchaseController::class, 'void'])->whereNumber('purchase')->name('purchases.void');
             Route::get('purchases/{purchase}/returns/create', [Erp\ReturnController::class, 'purchaseCreate'])->whereNumber('purchase')->name('purchases.returns.create');
             Route::post('purchases/{purchase}/returns', [Erp\ReturnController::class, 'purchaseStore'])->whereNumber('purchase')->name('purchases.returns.store');
             Route::get('purchase-returns', [Erp\ReturnController::class, 'purchaseIndex'])->name('purchase-returns.index');
             Route::get('purchase-returns/{purchaseReturn}', [Erp\ReturnController::class, 'purchaseShow'])->whereNumber('purchaseReturn')->name('purchase-returns.show');
+            Route::get('purchase-returns/{purchaseReturn}/edit', [Erp\ReturnController::class, 'purchaseEdit'])->whereNumber('purchaseReturn')->name('purchase-returns.edit');
+            Route::put('purchase-returns/{purchaseReturn}', [Erp\ReturnController::class, 'purchaseUpdate'])->whereNumber('purchaseReturn')->name('purchase-returns.update');
+            Route::delete('purchase-returns/{purchaseReturn}', [Erp\ReturnController::class, 'purchaseDestroy'])->whereNumber('purchaseReturn')->name('purchase-returns.destroy');
         });
         Route::middleware('can:sales.manage')->group(function () {
             Route::get('sales', [Erp\SaleController::class, 'index'])->name('sales.index');
@@ -134,16 +148,26 @@ Route::middleware(['web', SecurityHeaders::class, 'auth', 'verified', EnsureAcco
             Route::post('sales', [Erp\SaleController::class, 'store'])->name('sales.store');
             Route::get('sales/{sale}', [Erp\SaleController::class, 'show'])->whereNumber('sale')->name('sales.show');
             Route::post('sales/{sale}/payments', [Erp\SaleController::class, 'pay'])->whereNumber('sale')->name('sales.pay');
+            Route::get('sales/{sale}/edit', [Erp\SaleController::class, 'edit'])->whereNumber('sale')->name('sales.edit');
+            Route::put('sales/{sale}', [Erp\SaleController::class, 'update'])->whereNumber('sale')->name('sales.update');
+            Route::post('sales/{sale}/pay-link', [Erp\SaleController::class, 'payLink'])->whereNumber('sale')->name('sales.paylink');
             Route::post('sales/{sale}/void', [Erp\SaleController::class, 'void'])->whereNumber('sale')->name('sales.void');
             Route::get('sales/{sale}/returns/create', [Erp\ReturnController::class, 'saleCreate'])->whereNumber('sale')->name('sales.returns.create');
             Route::post('sales/{sale}/returns', [Erp\ReturnController::class, 'saleStore'])->whereNumber('sale')->name('sales.returns.store');
             Route::get('sale-returns', [Erp\ReturnController::class, 'saleIndex'])->name('sale-returns.index');
             Route::get('sale-returns/{saleReturn}', [Erp\ReturnController::class, 'saleShow'])->whereNumber('saleReturn')->name('sale-returns.show');
+            Route::get('sale-returns/{saleReturn}/edit', [Erp\ReturnController::class, 'saleEdit'])->whereNumber('saleReturn')->name('sale-returns.edit');
+            Route::put('sale-returns/{saleReturn}', [Erp\ReturnController::class, 'saleUpdate'])->whereNumber('saleReturn')->name('sale-returns.update');
+            Route::delete('sale-returns/{saleReturn}', [Erp\ReturnController::class, 'saleDestroy'])->whereNumber('saleReturn')->name('sale-returns.destroy');
             Route::get('challans', [Erp\ChallanController::class, 'index'])->name('challans.index');
             Route::get('sales/{sale}/challans/create', [Erp\ChallanController::class, 'create'])->whereNumber('sale')->name('sales.challans.create');
             Route::post('sales/{sale}/challans', [Erp\ChallanController::class, 'store'])->whereNumber('sale')->name('sales.challans.store');
             Route::get('challans/{challan}', [Erp\ChallanController::class, 'show'])->whereNumber('challan')->name('challans.show');
+            Route::get('challans/{challan}/edit', [Erp\ChallanController::class, 'edit'])->whereNumber('challan')->name('challans.edit');
+            Route::put('challans/{challan}', [Erp\ChallanController::class, 'update'])->whereNumber('challan')->name('challans.update');
+            Route::delete('challans/{challan}', [Erp\ChallanController::class, 'destroy'])->whereNumber('challan')->name('challans.destroy');
         });
+        Route::delete('payments/{payment}', [Erp\PaymentController::class, 'destroy'])->whereNumber('payment')->name('payments.destroy');
         Route::get('charts/{metric}', Erp\ChartController::class)->name('charts');
 
         // Recommended products (outbound Amazon / AliExpress links)

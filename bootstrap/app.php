@@ -11,7 +11,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // The payment gateway posts back to these two addresses without a session; they trust nothing and ask the gateway to confirm.
+        $middleware->validateCsrfTokens(except: ['pay-callback/*', 'pay-ipn']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

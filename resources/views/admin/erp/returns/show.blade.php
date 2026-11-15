@@ -5,8 +5,10 @@
     $total = $isSale ? $return->refund_total : $return->credit_total;
 @endphp
 <x-layouts.admin-shell title="{{ $isSale ? 'Sale return' : 'Purchase return' }} {{ $return->number() }}">
+    @error('delete')<p role="alert" class="no-print mb-4 rounded-control border border-red-300 bg-red-50 p-3 text-sm text-red-900">{{ $message }}</p>@enderror
     <div class="no-print mb-4 flex gap-3"><button type="button" onclick="window.print()" class="rounded-control bg-navy px-5 py-2.5 font-semibold text-white hover:bg-industrial">Print</button>
-        <a class="self-center underline text-industrial" href="{{ route($isSale ? 'admin.sales.show' : 'admin.purchases.show', $doc) }}">← {{ $doc->number() }}</a></div>
+        <a class="self-center underline text-industrial" href="{{ route($isSale ? 'admin.sales.show' : 'admin.purchases.show', $doc) }}">← {{ $doc->number() }}</a>
+        <a class="self-center underline text-industrial" href="{{ route($isSale ? 'admin.sale-returns.edit' : 'admin.purchase-returns.edit', $return) }}">Edit or delete</a></div>
     <article class="max-w-4xl rounded-panel border border-steel bg-white p-8 print:border-0 print:p-0">
         <div class="flex flex-wrap items-start justify-between gap-6">
             @include('admin.erp._company')

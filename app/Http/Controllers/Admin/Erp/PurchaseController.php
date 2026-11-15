@@ -75,4 +75,38 @@ class PurchaseController extends Controller
 
         return back()->with('status', 'Purchase voided and stock reversed.');
     }
+
+    public function edit(Purchase $purchase)
+    {
+        abort_if($purchase->isVoid(), 404);
+        $purchase->load('items');
+
+        return view('admin.erp.purchases.edit', [
+            'purchase' => $purchase, 'locked' => $purchase->returns()->exists(), 'suppliers' => Party::kind('supplier')->orderBy('name')->get(), 'stockItems' => StockItem::picklist(),
+            'rows' => $purchase->items->map(fn ($l) => ['stock_item_id' => $l->stock_item_id, 'quantity' => $l->quantity, 'price' => (float) $l->unit_cost])->values()->all(),
+        ]);
+    }
+
+    public function update(Request $request, Purchase $purchase, ErpService $erp)
+    {
+        $locked = $purchase->returns()->exists();
+        $rules = [
+            'supplier_id' => ['required', Rule::exists('parties', 'id')->where('kind', 'supplier')->whereNull('deleted_at')],
+            'purchased_on' => ['required', 'date'], 'notes' => ['nullable', 'string', 'max:1000'],
+        ];
+        if (! $locked) {
+            $rules += [
+                'discount' => ['nullable', 'numeric', 'min:0'], 'items' => ['required', 'array', 'min:1', 'max:60'],
+                'items.*.stock_item_id' => ['required', Rule::exists('stock_items', 'id')], 'items.*.quantity' => ['required', 'integer', 'min:1', 'max:1000000'],
+                'items.*.unit_cost' => ['required', 'numeric', 'min:0', 'max:99999999'],
+            ];
+        }
+        $d = $request->validate($rules);
+        $d['purchased_on'] = Carbon::parse($d['purchased_on'])->toDateString();
+
+        $erp->updatePurchase($purchase, $d, $request->user());
+        activity('admin')->causedBy($request->user())->performedOn($purchase)->log('purchase.updated');
+
+        return redirect()->route('admin.purchases.show', $purchase)->with('status', 'Purchase '.$purchase->number().' updated.');
+    }
 }
