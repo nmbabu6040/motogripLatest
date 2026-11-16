@@ -28,6 +28,17 @@
         </div>
     @endcan --}}
 
+    @can('pages.manage')
+        <div class="border-b border-amber/40 bg-amber/10">
+            <div class="container-x flex items-center justify-end py-2">
+                <a href="{{ route('admin.pages.edit', $page) }}"
+                    class="text-sm font-semibold text-industrial transition hover:text-amber hover:underline">
+                    {{ __('site.edit_page') }} →
+                </a>
+            </div>
+        </div>
+    @endcan
+
     <article class="container-x py-12" data-layout="{{ $layout }}">
         @if ($layout === 'banner')
             <img src="{{ $image }}" alt="{{ $page->title }}"

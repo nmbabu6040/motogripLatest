@@ -12,18 +12,25 @@ use App\Models\SaleReturnItem;
 use App\Services\Erp\ErpService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /** Sale returns (customer sends goods back) and purchase returns (we send goods back to the supplier). */
 class ReturnController extends Controller
 {
     public function saleIndex()
     {
-        return view('admin.erp.returns.index', ['kind' => 'sale', 'returns' => SaleReturn::with('sale.customer')->latest('returned_on')->latest('id')->paginate(25)]);
+        return view('admin.erp.returns.index', [
+            'kind' => 'sale', 'returns' => SaleReturn::with('sale.customer')->latest('returned_on')->latest('id')->paginate(25),
+            'choices' => Sale::with('customer')->where('status', 'confirmed')->latest('id')->limit(200)->get(),
+        ]);
     }
 
     public function purchaseIndex()
     {
-        return view('admin.erp.returns.index', ['kind' => 'purchase', 'returns' => PurchaseReturn::with('purchase.supplier')->latest('returned_on')->latest('id')->paginate(25)]);
+        return view('admin.erp.returns.index', [
+            'kind' => 'purchase', 'returns' => PurchaseReturn::with('purchase.supplier')->latest('returned_on')->latest('id')->paginate(25),
+            'choices' => Purchase::with('supplier')->where('status', 'received')->latest('id')->limit(200)->get(),
+        ]);
     }
 
     public function saleCreate(Sale $sale)
@@ -125,5 +132,20 @@ class ReturnController extends Controller
         activity('admin')->causedBy($request->user())->withProperties(['number' => $purchaseReturn->number()])->log('purchase_return.deleted');
 
         return redirect()->route('admin.purchase-returns.index')->with('status', 'Return deleted and stock corrected.');
+    }
+
+    /** "Make a new return" on the returns list: pick the invoice or purchase, then go to its return form. */
+    public function saleStart(Request $request)
+    {
+        $d = $request->validate(['sale' => ['required', 'integer', Rule::exists('sales', 'id')->where('status', 'confirmed')]], ['sale.*' => 'Choose an invoice from the list.']);
+
+        return redirect()->route('admin.sales.returns.create', $d['sale']);
+    }
+
+    public function purchaseStart(Request $request)
+    {
+        $d = $request->validate(['purchase' => ['required', 'integer', Rule::exists('purchases', 'id')->where('status', 'received')]], ['purchase.*' => 'Choose a purchase from the list.']);
+
+        return redirect()->route('admin.purchases.returns.create', $d['purchase']);
     }
 }

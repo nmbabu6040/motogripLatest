@@ -145,6 +145,7 @@ Route::middleware(['web', SecurityHeaders::class, 'auth', 'verified', EnsureAcco
             Route::get('purchases/{purchase}/returns/create', [Erp\ReturnController::class, 'purchaseCreate'])->whereNumber('purchase')->name('purchases.returns.create');
             Route::post('purchases/{purchase}/returns', [Erp\ReturnController::class, 'purchaseStore'])->whereNumber('purchase')->name('purchases.returns.store');
             Route::get('purchase-returns', [Erp\ReturnController::class, 'purchaseIndex'])->name('purchase-returns.index');
+            Route::get('purchase-returns/start', [Erp\ReturnController::class, 'purchaseStart'])->name('purchase-returns.start');
             Route::get('purchase-returns/{purchaseReturn}', [Erp\ReturnController::class, 'purchaseShow'])->whereNumber('purchaseReturn')->name('purchase-returns.show');
             Route::get('purchase-returns/{purchaseReturn}/edit', [Erp\ReturnController::class, 'purchaseEdit'])->whereNumber('purchaseReturn')->name('purchase-returns.edit');
             Route::put('purchase-returns/{purchaseReturn}', [Erp\ReturnController::class, 'purchaseUpdate'])->whereNumber('purchaseReturn')->name('purchase-returns.update');
@@ -163,11 +164,13 @@ Route::middleware(['web', SecurityHeaders::class, 'auth', 'verified', EnsureAcco
             Route::get('sales/{sale}/returns/create', [Erp\ReturnController::class, 'saleCreate'])->whereNumber('sale')->name('sales.returns.create');
             Route::post('sales/{sale}/returns', [Erp\ReturnController::class, 'saleStore'])->whereNumber('sale')->name('sales.returns.store');
             Route::get('sale-returns', [Erp\ReturnController::class, 'saleIndex'])->name('sale-returns.index');
+            Route::get('sale-returns/start', [Erp\ReturnController::class, 'saleStart'])->name('sale-returns.start');
             Route::get('sale-returns/{saleReturn}', [Erp\ReturnController::class, 'saleShow'])->whereNumber('saleReturn')->name('sale-returns.show');
             Route::get('sale-returns/{saleReturn}/edit', [Erp\ReturnController::class, 'saleEdit'])->whereNumber('saleReturn')->name('sale-returns.edit');
             Route::put('sale-returns/{saleReturn}', [Erp\ReturnController::class, 'saleUpdate'])->whereNumber('saleReturn')->name('sale-returns.update');
             Route::delete('sale-returns/{saleReturn}', [Erp\ReturnController::class, 'saleDestroy'])->whereNumber('saleReturn')->name('sale-returns.destroy');
             Route::get('challans', [Erp\ChallanController::class, 'index'])->name('challans.index');
+            Route::get('challans/start', [Erp\ChallanController::class, 'start'])->name('challans.start');
             Route::get('sales/{sale}/challans/create', [Erp\ChallanController::class, 'create'])->whereNumber('sale')->name('sales.challans.create');
             Route::post('sales/{sale}/challans', [Erp\ChallanController::class, 'store'])->whereNumber('sale')->name('sales.challans.store');
             Route::get('challans/{challan}', [Erp\ChallanController::class, 'show'])->whereNumber('challan')->name('challans.show');

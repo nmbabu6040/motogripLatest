@@ -10,12 +10,16 @@ use App\Models\SaleReturnItem;
 use App\Services\Erp\ErpService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ChallanController extends Controller
 {
     public function index()
     {
-        return view('admin.erp.challans.index', ['challans' => Challan::with('sale.customer')->latest('delivered_on')->latest('id')->paginate(25)]);
+        return view('admin.erp.challans.index', [
+            'challans' => Challan::with('sale.customer')->latest('delivered_on')->latest('id')->paginate(25),
+            'choices' => Sale::with('customer')->where('status', 'confirmed')->latest('id')->limit(200)->get(),
+        ]);
     }
 
     public function create(Sale $sale)
@@ -77,5 +81,13 @@ class ChallanController extends Controller
         $challan->delete();   // a challan does not move stock, so nothing else changes
 
         return redirect()->route('admin.sales.show', $sale)->with('status', 'Challan deleted. Those items can be put on a new challan.');
+    }
+
+    /** "Make a new challan" on the challan list: pick the invoice, then go to its challan form. */
+    public function start(Request $request)
+    {
+        $d = $request->validate(['sale' => ['required', 'integer', Rule::exists('sales', 'id')->where('status', 'confirmed')]], ['sale.*' => 'Choose an invoice from the list.']);
+
+        return redirect()->route('admin.sales.challans.create', $d['sale']);
     }
 }
