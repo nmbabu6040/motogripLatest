@@ -27,6 +27,10 @@ Route::middleware(['web', SecurityHeaders::class])->group(function () {
     Route::match(['get', 'post'], 'pay-callback/{outcome}', [\App\Http\Controllers\PayController::class, 'callback'])->where('outcome', 'success|fail|cancel')->name('pay.callback');
     Route::post('pay-ipn', [\App\Http\Controllers\PayController::class, 'ipn'])->name('pay.ipn');
     Route::post('recommended/{partnerLink}/click', [\App\Http\Controllers\PartnerController::class, 'click'])->middleware('throttle:30,1')->name('partners.click');
+    // Live chat, visitor side. The visitor is recognised only by a secret token kept in their own browser.
+    Route::post('chat/start', [\App\Http\Controllers\ChatController::class, 'start'])->middleware('throttle:5,1')->name('chat.start');
+    Route::post('chat/send', [\App\Http\Controllers\ChatController::class, 'send'])->middleware('throttle:20,1')->name('chat.send');
+    Route::get('chat/messages', [\App\Http\Controllers\ChatController::class, 'poll'])->middleware('throttle:90,1')->name('chat.poll');
     Route::post('newsletter', [NewsletterController::class, 'subscribe'])->middleware('throttle:5,10')->name('newsletter.subscribe');
     Route::get('newsletter/confirm/{subscriber}', [NewsletterController::class, 'confirm'])->middleware('signed')->name('newsletter.confirm');
     Route::get('newsletter/unsubscribe/{subscriber}', [NewsletterController::class, 'unsubscribe'])->middleware('signed')->name('newsletter.unsubscribe');

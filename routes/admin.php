@@ -184,6 +184,34 @@ Route::middleware(['web', SecurityHeaders::class, 'auth', 'verified', EnsureAcco
         // Recommended products (outbound Amazon / AliExpress links)
         Route::middleware('can:partners.manage')->group(fn() => Route::resource('partner-links', Admin\PartnerLinkController::class)->except('show'));
 
+        // Menus (header and footer) and live chat
+        Route::middleware('can:homepage.manage')->prefix('menus')->name('menus.')->group(function () {
+            Route::get('/', [Admin\MenuController::class, 'index'])->name('index');
+            Route::post('/', [Admin\MenuController::class, 'create'])->name('create');
+            Route::put('{item}', [Admin\MenuController::class, 'update'])->whereNumber('item')->name('update');
+            Route::post('{item}/toggle', [Admin\MenuController::class, 'toggle'])->whereNumber('item')->name('toggle');
+            Route::post('{item}/move', [Admin\MenuController::class, 'move'])->whereNumber('item')->name('move');
+            Route::delete('{item}', [Admin\MenuController::class, 'destroy'])->whereNumber('item')->name('destroy');
+
+            // Route::post('defaults/{location}', [Admin\MenuController::class, 'defaults'])->where('location', 'header|footer')->name('defaults');
+            // Route::post('reset/{location}', [Admin\MenuController::class, 'reset'])->where('location', 'header|footer')->name('reset');
+
+            Route::post('defaults/{location}', [Admin\MenuController::class, 'defaults'])
+                ->name('defaults');
+
+            Route::post('reset/{location}', [Admin\MenuController::class, 'reset'])
+                ->name('reset');
+        });
+        Route::middleware('can:inquiries.manage')->prefix('chats')->name('chats.')->group(function () {
+            Route::get('/', [Admin\ChatController::class, 'index'])->name('index');
+            Route::get('{conversation}', [Admin\ChatController::class, 'show'])->whereNumber('conversation')->name('show');
+            Route::get('{conversation}/messages', [Admin\ChatController::class, 'poll'])->whereNumber('conversation')->name('poll');
+            Route::post('{conversation}/reply', [Admin\ChatController::class, 'reply'])->whereNumber('conversation')->name('reply');
+            Route::post('{conversation}/close', [Admin\ChatController::class, 'close'])->whereNumber('conversation')->name('close');
+            Route::post('{conversation}/reopen', [Admin\ChatController::class, 'reopen'])->whereNumber('conversation')->name('reopen');
+            Route::delete('{conversation}', [Admin\ChatController::class, 'destroy'])->whereNumber('conversation')->name('destroy');
+        });
+
         // Reports
         Route::get('reports/data', [Admin\ReportController::class, 'data'])->name('reports.data');
         Route::get('reports/export', [Admin\ReportController::class, 'export'])->name('reports.export');

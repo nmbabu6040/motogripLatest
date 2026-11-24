@@ -25,6 +25,12 @@ class SettingsController extends Controller
         ],
         'Footer and legal' => [
             'footer_copyright' => ['footer', 'copyright', 'Footer copyright text', 'text', ['nullable', 'string', 'max:200']],
+            'footer_about' => ['footer', 'about', 'Short "About us" text under the footer logo (English)', 'text', ['nullable', 'string', 'max:400']],
+            'footer_about_bn' => ['footer', 'about_bn', 'Short "About us" text under the footer logo (বাংলা)', 'text', ['nullable', 'string', 'max:400']],
+        ],
+        'Live chat' => [
+            'chat_enabled' => ['chat', 'enabled', 'Show the live chat button on the website', 'bool', ['nullable', 'boolean']],
+            'chat_welcome' => ['chat', 'welcome', 'Short welcome line at the top of the chat window', 'text', ['nullable', 'string', 'max:160']],
         ],
         'Contact' => [
             'contact_email' => ['contact', 'email', 'Support email (inquiry notifications are sent here)', 'text', ['nullable', 'email', 'max:160']],

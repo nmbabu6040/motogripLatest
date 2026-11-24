@@ -12,3 +12,6 @@ Schedule::command('motogrip:backup-verify')->dailyAt('03:30');
 Schedule::command('motogrip:purge-old-data')->weeklyOn(1, '04:00');
 Schedule::command('queue:prune-failed --hours=720')->daily();
 Schedule::command('model:prune')->daily();
+
+// Live chat conversations are deleted after 90 days without a message.
+\Illuminate\Support\Facades\Schedule::command('chat:prune')->daily();

@@ -21,7 +21,7 @@ class Navigation
         if ($rows) {
             return collect($rows)->map(fn ($r) => [
                 'label' => Lang::pick($r->label),
-                'url' => $r->route_name ? Lang::route($r->route_name) : (string) $r->url,
+                'url' => $r->route_name ? Lang::route($r->route_name) : self::localUrl((string) $r->url),
                 'new_tab' => (bool) $r->opens_in_new_tab,
                 'parent_id' => $r->parent_id,
                 'id' => $r->id,
@@ -49,6 +49,31 @@ class Navigation
             $item(__('site.blog'), Lang::route('blog.index'), 4),
             $item(__('site.contact'), Lang::route('contact.create'), 5),
         ]);
+    }
+
+    /** An address that starts with / belongs to this site and gets the /bn prefix in Bengali; full https:// links stay as they are. */
+    public static function localUrl(string $u): string
+    {
+        if (! str_starts_with($u, '/')) {
+            return $u;
+        }
+        if (app()->getLocale() === 'bn' && ! str_starts_with($u, '/bn')) {
+            $u = '/bn'.($u === '/' ? '' : $u);
+        }
+
+        return url($u === '' ? '/' : $u);
+    }
+
+    /** " (3)" when visitors are waiting in live chat, otherwise nothing. Never breaks a page. */
+    public static function chatBadge(): string
+    {
+        try {
+            $n = (int) \Illuminate\Support\Facades\DB::table('chat_conversations')->sum('staff_unread');
+
+            return $n > 0 ? " ({$n})" : '';
+        } catch (\Throwable) {
+            return '';
+        }
     }
 
     public static function forget(): void

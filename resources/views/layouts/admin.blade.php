@@ -57,6 +57,8 @@
             ['Comments', 'admin.comments.index', 'comments.moderate', 'chat'],
             ['Pages', 'admin.pages.index', 'pages.manage', 'page'],
             ['Homepage', 'admin.homepage.index', 'homepage.manage', 'layout'],
+            ['Menus', 'admin.menus.index', 'homepage.manage', 'layout'],
+            ['Chats'.\App\Support\Navigation::chatBadge(), 'admin.chats.index', 'inquiries.manage', 'chat'],
             ['FAQs', 'admin.faqs.index', 'homepage.manage', 'help'],
         ],
         'Growth' => [

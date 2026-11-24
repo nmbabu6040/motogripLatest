@@ -227,14 +227,50 @@
                 @if ($t = \App\Support\Settings::get('brand', 'tagline'))
                     <p class="mt-4 max-w-xs leading-relaxed">{{ $t }}</p>
                 @endif
-                <ul class="mt-5 flex flex-wrap gap-2">
-                    @foreach (['facebook' => 'Facebook', 'linkedin' => 'LinkedIn', 'youtube' => 'YouTube', 'instagram' => 'Instagram'] as $key => $label)
-                        @if ($v = \App\Support\Settings::get('social', $key))
-                            <li><a href="{{ $v }}" rel="noopener" target="_blank"
-                                    class="rounded-full border border-white/25 px-3 py-1 text-xs font-semibold transition hover:border-amber hover:text-amber">{{ $label }}</a>
-                            </li>
-                        @endif
-                    @endforeach
+                @php $footerAbout = app()->getLocale() === 'bn' ? (\App\Support\Settings::get('footer', 'about_bn') ?: \App\Support\Settings::get('footer', 'about')) : \App\Support\Settings::get('footer', 'about'); @endphp
+                @if ($footerAbout)
+                    <p class="mt-4 max-w-sm text-sm leading-relaxed">{{ $footerAbout }}</p>
+                @endif
+                <ul class="mt-5 flex flex-wrap gap-3" aria-label="Social media">
+                    @if ($v = \App\Support\Settings::get('social', 'facebook'))
+                        <li><a href="{{ $v }}" rel="noopener" target="_blank" aria-label="Facebook"
+                                class="flex h-10 w-10 items-center justify-center rounded-full border border-white/25 transition hover:border-amber hover:bg-amber hover:text-navy"><svg
+                                    class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
+                                    <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
+                                </svg></a></li>
+                    @endif
+                    @if ($v = \App\Support\Settings::get('social', 'linkedin'))
+                        <li><a href="{{ $v }}" rel="noopener" target="_blank" aria-label="LinkedIn"
+                                class="flex h-10 w-10 items-center justify-center rounded-full border border-white/25 transition hover:border-amber hover:bg-amber hover:text-navy"><svg
+                                    class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
+                                    <path
+                                        d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2zM4 2a2 2 0 110 4 2 2 0 010-4z" />
+                                </svg></a></li>
+                    @endif
+                    @if ($v = \App\Support\Settings::get('social', 'youtube'))
+                        <li><a href="{{ $v }}" rel="noopener" target="_blank" aria-label="YouTube"
+                                class="flex h-10 w-10 items-center justify-center rounded-full border border-white/25 transition hover:border-amber hover:bg-amber hover:text-navy"><svg
+                                    class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
+                                    <path
+                                        d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.33zM9.75 15.02V8.48L15.45 11.75z" />
+                                </svg></a></li>
+                    @endif
+                    @if ($v = \App\Support\Settings::get('social', 'instagram'))
+                        <li><a href="{{ $v }}" rel="noopener" target="_blank" aria-label="Instagram"
+                                class="flex h-10 w-10 items-center justify-center rounded-full border border-white/25 transition hover:border-amber hover:bg-amber hover:text-navy"><svg
+                                    class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
+                                    <path
+                                        d="M7 2h10a5 5 0 015 5v10a5 5 0 01-5 5H7a5 5 0 01-5-5V7a5 5 0 015-5zM16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zM17.5 6.5h.01" />
+                                </svg></a></li>
+                    @endif
                 </ul>
             </div>
             <div>
@@ -251,67 +287,103 @@
             <div>
                 <h2 class="text-sm font-bold uppercase tracking-wider text-white">{{ __('site.footer_company') }}</h2>
                 <ul class="mt-4 space-y-2 text-sm">
-                    <li><a class="transition hover:text-amber" href="{{ $lr('home') }}">{{ __('site.home') }}</a>
-                    </li>
-                    @foreach ($footerPages as $p)
+                    @php $footerMenu = \App\Support\Navigation::items('footer'); @endphp
+                    @if (count($footerMenu))
+                        @foreach ($footerMenu as $m)
+                            <li><a class="transition hover:text-amber"
+                                    href="{{ $m['url'] }}"@if ($m['new_tab']) target="_blank" rel="noopener" @endif>{{ $m['label'] }}</a>
+                            </li>
+                        @endforeach
+                    @else
                         <li><a class="transition hover:text-amber"
-                                href="{{ $lr('page.show', ['page' => $p['slug']]) }}">{{ $p['title'] }}</a></li>
-                    @endforeach
-                    <li><a class="transition hover:text-amber"
-                            href="{{ $lr('resources.index') }}">{{ __('site.resources') }}</a></li>
-                    <li><a class="transition hover:text-amber"
-                            href="{{ $lr('dealers.index') }}">{{ __('site.dealers') }}</a></li>
-                    <li><a class="transition hover:text-amber"
-                            href="{{ $lr('blog.index') }}">{{ __('site.blog') }}</a></li>
-                    @if ($hasPartners)
+                                href="{{ $lr('home') }}">{{ __('site.home') }}</a>
+                        </li>
+                        @foreach ($footerPages as $p)
+                            <li><a class="transition hover:text-amber"
+                                    href="{{ $lr('page.show', ['page' => $p['slug']]) }}">{{ $p['title'] }}</a>
+                            </li>
+                        @endforeach
                         <li><a class="transition hover:text-amber"
-                                href="{{ $lr('partners.index') }}">{{ __('site.recommended') }}</a></li>
+                                href="{{ $lr('resources.index') }}">{{ __('site.resources') }}</a></li>
+                        <li><a class="transition hover:text-amber"
+                                href="{{ $lr('dealers.index') }}">{{ __('site.dealers') }}</a></li>
+                        <li><a class="transition hover:text-amber"
+                                href="{{ $lr('blog.index') }}">{{ __('site.blog') }}</a></li>
+                        @if ($hasPartners)
+                            <li><a class="transition hover:text-amber"
+                                    href="{{ $lr('partners.index') }}">{{ __('site.recommended') }}</a></li>
+                        @endif
+                        <li><a class="transition hover:text-amber"
+                                href="{{ $lr('contact.create') }}">{{ __('site.contact') }}</a></li>
                     @endif
-                    <li><a class="transition hover:text-amber"
-                            href="{{ $lr('contact.create') }}">{{ __('site.contact') }}</a></li>
                 </ul>
             </div>
             <div>
-                <h2 class="text-sm font-bold uppercase tracking-wider text-white">{{ __('site.footer_contact') }}</h2>
-                <dl class="mt-4 space-y-4 text-sm">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-white">
+                    {{ __('site.footer_contact') }}
+                </h2>
+
+                <dl class="mt-4 space-y-3 text-sm">
+
                     @if ($v = \App\Support\Settings::get('contact', 'address'))
-                        <div>
-                            <dt class="text-xs font-bold uppercase tracking-wider text-amber">{{ __('site.address') }}
-                            </dt>
-                            <dd class="mt-1 leading-relaxed">{{ $v }}</dd>
-                        </div>
-                    @endif
-                    @if ($v = \App\Support\Settings::get('contact', 'phone'))
-                        <div>
-                            <dt class="text-xs font-bold uppercase tracking-wider text-amber">{{ __('site.mobile') }}
-                            </dt>
-                            <dd class="mt-1"><a class="transition hover:text-amber"
-                                    href="tel:{{ preg_replace('/[^0-9+]/', '', $v) }}">{{ $v }}</a></dd>
-                        </div>
-                    @endif
-                    @if ($v = \App\Support\Settings::get('contact', 'whatsapp'))
-                        <div>
-                            <dt class="text-xs font-bold uppercase tracking-wider text-amber">WhatsApp</dt>
-                            <dd class="mt-1"><a class="transition hover:text-amber"
-                                    href="https://wa.me/{{ $v }}" target="_blank"
-                                    rel="noopener">{{ $v }}</a></dd>
-                        </div>
-                    @endif
-                    @if ($v = \App\Support\Settings::get('contact', 'email'))
-                        <div>
+                        <div class="grid grid-cols-[5.5rem_1fr] gap-3">
                             <dt class="text-xs font-bold uppercase tracking-wider text-amber">
-                                {{ __('site.email_short') }}</dt>
-                            <dd class="mt-1 break-all"><a class="transition hover:text-amber"
-                                    href="mailto:{{ $v }}">{{ $v }}</a></dd>
-                        </div>
-                    @endif
-                    @if ($v = \App\Support\Settings::get('contact', 'business_hours'))
-                        <div>
-                            <dt class="text-xs font-bold uppercase tracking-wider text-amber">{{ __('site.hours') }}
+                                {{ __('site.address') }}
                             </dt>
-                            <dd class="mt-1">{{ $v }}</dd>
+                            <dd class="min-w-0 leading-relaxed">{{ $v }}</dd>
                         </div>
                     @endif
+
+                    @if ($v = \App\Support\Settings::get('contact', 'phone'))
+                        <div class="grid grid-cols-[5.5rem_1fr] gap-3">
+                            <dt class="text-xs font-bold uppercase tracking-wider text-amber">
+                                {{ __('site.mobile') }}
+                            </dt>
+                            <dd class="min-w-0">
+                                <a class="transition hover:text-amber"
+                                    href="tel:{{ preg_replace('/[^0-9+]/', '', $v) }}">
+                                    {{ $v }}
+                                </a>
+                            </dd>
+                        </div>
+                    @endif
+
+                    @if ($v = \App\Support\Settings::get('contact', 'whatsapp'))
+                        <div class="grid grid-cols-[5.5rem_1fr] gap-3">
+                            <dt class="text-xs font-bold uppercase tracking-wider text-amber">
+                                WhatsApp
+                            </dt>
+                            <dd class="min-w-0">
+                                <a class="transition hover:text-amber" href="https://wa.me/{{ $v }}"
+                                    target="_blank" rel="noopener">
+                                    {{ $v }}
+                                </a>
+                            </dd>
+                        </div>
+                    @endif
+
+                    @if ($v = \App\Support\Settings::get('contact', 'email'))
+                        <div class="grid grid-cols-[5.5rem_1fr] gap-3">
+                            <dt class="text-xs font-bold uppercase tracking-wider text-amber">
+                                {{ __('site.email_short') }}
+                            </dt>
+                            <dd class="min-w-0 break-all">
+                                <a class="transition hover:text-amber" href="mailto:{{ $v }}">
+                                    {{ $v }}
+                                </a>
+                            </dd>
+                        </div>
+                    @endif
+
+                    @if ($v = \App\Support\Settings::get('contact', 'business_hours'))
+                        <div class="grid grid-cols-[5.5rem_1fr] gap-3">
+                            <dt class="text-xs font-bold uppercase tracking-wider text-amber">
+                                {{ __('site.hours') }}
+                            </dt>
+                            <dd class="min-w-0">{{ $v }}</dd>
+                        </div>
+                    @endif
+
                 </dl>
             </div>
         </div>
@@ -320,6 +392,9 @@
                 {{ \App\Support\Settings::get('footer', 'copyright', '© ' . date('Y') . ' ' . $siteName) }}</p>
         </div>
     </footer>
+
+    <x-back-to-top />
+    <x-chat-widget />
 
     {{-- Floating WhatsApp button: appears only when a WhatsApp number is saved in Settings. --}}
     @if ($waNumber = \App\Support\Settings::get('contact', 'whatsapp'))
