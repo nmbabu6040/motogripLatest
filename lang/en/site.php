@@ -149,4 +149,5 @@ return [
     'chat_closed' => 'This chat was closed. Write again to reopen it.',
     'chat_new' => 'Start a new chat',
     'chat_error' => 'Something went wrong. Please try again.',
+    'gallery' => 'Gallery',
 ];
